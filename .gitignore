@@ -1,0 +1,78 @@
+# ============================================================================
+# 1. ENVIRONMENT & SECRET API KEYS (JANGAN PUSH API KEY KE GITHUB)
+# ============================================================================
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# ============================================================================
+# 2. BACKEND (FastAPI / Python / SQLite)
+# ============================================================================
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+backend/.venv/
+backend/venv/
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local SQLite Database (otomatis di-seed ulang oleh backend/database.py)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ============================================================================
+# 3. FRONTEND (Next.js / Node.js / TypeScript)
+# ============================================================================
+node_modules/
+frontend/node_modules/
+
+# Next.js Build Output
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+dist/
+
+# TypeScript & Next.js Generated Files
+*.tsbuildinfo
+next-env.d.ts
+frontend/next-env.d.ts
+
+# Vercel / Turbo
+.vercel/
+.turbo/
+
+# Package Manager Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ============================================================================
+# 4. OS, IDE & LOG FILES
+# ============================================================================
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+*.swp
+*.swo
