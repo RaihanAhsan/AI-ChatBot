@@ -6,7 +6,7 @@ from llm.knowledge_base import POLICIES_DATA, PROMOS_DATA, fmt_rp
 
 
 def _format_llm_text_to_html(text: str) -> str:
-    """Mengubah markdown (**bold** dan baris baru) dari LLM menjadi HTML rapi untuk chat UI."""
+    """Converts markdown (**bold** and newlines) from LLM into clean HTML for chat UI."""
     cleaned = re.sub(
         r"\*\*(.+?)\*\*",
         r'<b class="text-gold-300">\1</b>',
@@ -19,9 +19,9 @@ def _format_llm_text_to_html(text: str) -> str:
 
 def _build_gemini_contents(messages: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     """
-    Menyusun riwayat pesan untuk Gemini API:
-    - Wajib diawali oleh role 'user' (pesan welcome awal dari 'assistant' dilewati).
-    - Menggabungkan pesan berurutan dengan role yang sama agar selalu bergantian user/model.
+    Formats conversation history for Gemini API:
+    - Must start with role 'user' (initial 'assistant' welcome message is skipped).
+    - Merges consecutive messages with the same role so turns strictly alternate user/model.
     """
     contents: List[Dict[str, Any]] = []
     for m in messages[-10:]:
@@ -29,7 +29,6 @@ def _build_gemini_contents(messages: List[Dict[str, str]]) -> List[Dict[str, Any
         content_text = re.sub(r"<[^>]+>", " ", m.get("content", "")).strip()
         if not content_text:
             continue
-        # Gemini wajib memulai percakapan dengan role 'user'
         if not contents and role == "model":
             continue
         if contents and contents[-1]["role"] == role:
@@ -39,15 +38,15 @@ def _build_gemini_contents(messages: List[Dict[str, str]]) -> List[Dict[str, Any
 
     if not contents and messages:
         last_text = messages[-1].get("content", "").strip()
-        contents.append({"role": "user", "parts": [{"text": last_text or "Halo"}]})
+        contents.append({"role": "user", "parts": [{"text": last_text or "Hello"}]})
     return contents
 
 
 async def call_gemini(system_prompt: str, messages: List[Dict[str, str]]) -> str:
     """
-    Memanggil Google Gemini API (generativelanguage.googleapis.com).
-    Menggunakan model aktif (gemini-3.5-flash / gemini-3.1-flash-lite) dengan thinkingBudget=0
-    agar merespons cepat (~2 detik) dan tidak terkena 404 pada akun baru.
+    Calls Google Gemini API (generativelanguage.googleapis.com).
+    Uses active models (gemini-3.5-flash / gemini-3.1-flash-lite) with thinkingBudget=0
+    for fast ~2s responses without 404 errors on new accounts.
     """
     api_key = runtime_config.gemini_api_key.strip()
     contents = _build_gemini_contents(messages)
@@ -139,9 +138,7 @@ async def call_ollama(system_prompt: str, messages: List[Dict[str, str]]) -> str
 
 def generate_smart_rag_response(user_message: str, rag: Dict[str, Any]) -> str:
     """
-    Built-in Context-Aware AI Concierge (Smart RAG Engine).
-    Memahami filter harga (di atas / di bawah / sekitar nominal tertentu),
-    bahasa santai/non-baku, serta merinci tipe kamar yang sesuai budget.
+    Built-in Context-Aware AI Concierge (Smart RAG Engine) in English.
     """
     text = user_message.lower().strip()
     intent = rag["intent"]
@@ -157,89 +154,89 @@ def generate_smart_rag_response(user_message: str, rag: Dict[str, Any]) -> str:
     if intent == "booking_check":
         if not bookings:
             return (
-                'Saat ini belum ada reservasi aktif yang tercatat pada akun Anda.<br><br>'
-                'Apakah Anda ingin saya bantu merekomendasikan properti terbaik kami di <b class="text-gold-300">Bali</b>, '
-                '<b class="text-gold-300">Jakarta</b>, atau <b class="text-gold-300">Maldives</b>?'
+                'You currently have no active reservations recorded under your account.<br><br>'
+                'Would you like me to curate our finest properties in <b class="text-gold-300">Bali</b>, '
+                '<b class="text-gold-300">Jakarta</b>, or the <b class="text-gold-300">Maldives</b>?'
             )
         lines = [
-            f'Saya menemukan <b class="text-gold-300">{len(bookings)} reservasi</b> pada akun Anda ✦<br>'
+            f'I found <b class="text-gold-300">{len(bookings)} reservation(s)</b> under your account ✦<br>'
         ]
         for b in bookings[:3]:
-            status_label = "AKAN DATANG" if b["status"] == "upcoming" else "SELESAI"
+            status_label = "UPCOMING" if b["status"] == "upcoming" else "COMPLETED"
             lines.append(
-                f'• Kode <b class="text-gold-300">{b["code"]}</b> ({status_label})<br>'
+                f'• Code <b class="text-gold-300">{b["code"]}</b> ({status_label})<br>'
                 f'  <b>{b["hotel_name"]}</b> — {b["room_name"]}<br>'
-                f'  📅 {b["check_in"]} → {b["check_out"]} ({b["nights"]} malam, {b["guests"]} tamu)<br>'
-                f'  💎 Total Dibayar: <b class="text-gold-300">{fmt_rp(b["total"])}</b>'
+                f'  📅 {b["check_in"]} → {b["check_out"]} ({b["nights"]} nights, {b["guests"]} guests)<br>'
+                f'  💎 Total Paid: <b class="text-gold-300">{fmt_rp(b["total"])}</b>'
             )
         lines.append(
-            "<br>Tunjukkan kode booking tersebut kepada Personal Butler kami saat check-in."
+            "<br>Simply present your booking code to our Personal Butler upon check-in."
         )
         return "<br>".join(lines)
 
     # 2. Price Calculation / Quote Simulation
     if intent == "price_calculation" and quote:
         return (
-            f'Berikut simulasi rincian biaya menginap <b class="text-gold-300">{quote["nights"]} malam</b> di '
+            f'Here is the estimated breakdown for a <b class="text-gold-300">{quote["nights"]}-night stay</b> at '
             f'<b class="text-gold-300">{quote["hotelName"]}</b> ({quote["hotelCity"]}) ✦<br><br>'
-            f'• Tipe Kamar: <b>{quote["roomName"]}</b><br>'
-            f'• Harga per Malam: {fmt_rp(quote["roomPrice"])}<br>'
-            f'• Subtotal ({quote["nights"]} malam): {fmt_rp(quote["subtotal"])}<br>'
-            f'• Pajak PPN (11%): {fmt_rp(quote["tax"])}<br>'
+            f'• Room Type: <b>{quote["roomName"]}</b><br>'
+            f'• Nightly Rate: {fmt_rp(quote["roomPrice"])}<br>'
+            f'• Subtotal ({quote["nights"]} nights): {fmt_rp(quote["subtotal"])}<br>'
+            f'• VAT Tax (11%): {fmt_rp(quote["tax"])}<br>'
             f'• Service Charge (5%): {fmt_rp(quote["service"])}<br>'
             f'────────────────────────<br>'
-            f'✦ <b class="text-gold-300">Estimasi Total: {fmt_rp(quote["total"])}</b><br><br>'
-            f'Harga sudah termasuk sarapan pagi dan pembatalan gratis hingga 24 jam sebelum check-in. '
-            f'Klik tombol pada kartu di bawah untuk langsung melanjutkan pemesanan.'
+            f'✦ <b class="text-gold-300">Estimated Total: {fmt_rp(quote["total"])}</b><br><br>'
+            f'Rates include daily breakfast and complimentary cancellation up to 24 hours before check-in. '
+            f'Click the button on the card below to proceed directly to booking.'
         )
 
     # 3. Promo & Membership
     if intent == "promo_inquiry":
         promo_items = "<br>".join(
-            f'✦ <b class="text-gold-300">{p["title"]}</b> (Kode: <code>{p["code"]}</code>)<br>  {p["desc"]}'
+            f'✦ <b class="text-gold-300">{p["title"]}</b> (Code: <code>{p["code"]}</code>)<br>  {p["desc"]}'
             for p in PROMOS_DATA
         )
         return (
-            f"Saat ini tersedia penawaran eksklusif di Aurelia Collection:<br><br>"
+            f"Here are the exclusive offers currently available at Aurelia Collection:<br><br>"
             f"{promo_items}<br><br>"
-            f'Sebagai <b class="text-gold-300">Gold Member</b>, Anda juga menikmati prioritas late check-out dan welcome amenity di seluruh properti.'
+            f'As a <b class="text-gold-300">Gold Member</b>, you also enjoy priority late check-out and welcome amenities across all properties.'
         )
 
     # 4. Cancellation Policy
     if intent == "cancellation_policy":
         pol = "<br>".join(f"• {c}" for c in POLICIES_DATA["cancellation"])
         return (
-            f'Berikut <b class="text-gold-300">Kebijakan Pembatalan & Refund</b> Aurelia Collection:<br><br>'
+            f'Here is the <b class="text-gold-300">Cancellation & Refund Policy</b> at Aurelia Collection:<br><br>'
             f"{pol}<br><br>"
-            f"Apakah ada reservasi yang ingin Anda tinjau?"
+            f"Is there a specific reservation you would like me to assist you with?"
         )
 
     # 5. Payment Methods
     if intent == "payment_policy":
         methods = "<br>".join(f"• {m}" for m in POLICIES_DATA["payment_methods"])
         return (
-            f'Kami mendukung berbagai metode pembayaran instan yang terenkripsi penuh ✦<br><br>'
+            f'We support a wide range of fully encrypted instant payment methods ✦<br><br>'
             f"{methods}<br><br>"
-            f"Seluruh transaksi dilindungi protokol keamanan perbankan SSL 256-bit."
+            f"Every transaction is protected by bank-grade 256-bit SSL security protocols."
         )
 
     # 6. Booking Guide
     if intent == "booking_guide":
         return (
-            'Memesan kamar di <b class="text-gold-300">Aurelia Collection</b> sangat mudah ✦<br><br>'
-            '1. Pilih destinasi & tanggal menginap di Beranda atau klik kartu rekomendasi di chat ini<br>'
-            '2. Pilih tipe kamar/vila yang sesuai preferensi Anda<br>'
-            '3. Isi detail tamu sesuai KTP/Paspor<br>'
-            '4. Pilih metode pembayaran (Kartu Kredit, Virtual Account, atau E-Wallet)<br>'
-            '5. Kode booking <b class="text-gold-300">AUR-XXXXXX</b> langsung diterbitkan seketika!'
+            'Reserving a stay at <b class="text-gold-300">Aurelia Collection</b> is effortless ✦<br><br>'
+            '1. Select your destination & stay dates on the Home page or click a recommended hotel card in this chat<br>'
+            '2. Choose your preferred room, suite, or private villa<br>'
+            '3. Enter guest details as shown on your ID/Passport<br>'
+            '4. Choose your payment method (Credit Card, Virtual Account, or E-Wallet)<br>'
+            '5. Your instant booking code <b class="text-gold-300">AUR-XXXXXX</b> is issued immediately!'
         )
 
-    # 7. Specific Budget Queries ("di atas X", "di bawah X", "sekitar/harga X")
+    # 7. Specific Budget Queries ("above X", "below X", "around X")
     if budget_mode == "above" and min_budget is not None:
         if not matched:
             return (
-                f'Saat ini belum ada kamar dengan tarif di atas <b class="text-gold-300">{fmt_rp(min_budget)}</b>/malam. '
-                f'Kamar tertinggi kami adalah <b class="text-gold-300">Royal Sunset Water Residence</b> di Lumière Riviera Maldives seharga <b class="text-gold-300">Rp 9.200.000</b>/malam.'
+                f'We currently do not have rooms priced above <b class="text-gold-300">{fmt_rp(min_budget)}</b>/night. '
+                f'Our most prestigious accommodation is the <b class="text-gold-300">Sunset Grand Villa</b> at Lumière Riviera Maldives at <b class="text-gold-300">Rp 12.500.000</b>/night.'
             )
         blocks = []
         for h in matched:
@@ -247,18 +244,18 @@ def generate_smart_rag_response(user_message: str, rag: Dict[str, Any]) -> str:
             if not matching_rooms:
                 matching_rooms = h["rooms"]
             rooms_str = ", ".join(
-                f'<b>{r["name"]}</b> (<b class="text-gold-300">{fmt_rp(r["price"])}</b>/malam)'
+                f'<b>{r["name"]}</b> (<b class="text-gold-300">{fmt_rp(r["price"])}</b>/night)'
                 for r in matching_rooms
             )
             blocks.append(
                 f'✦ <b class="text-gold-300">{h["name"]}</b> — {h["location"]} (★ {h["rating"]})<br>'
-                f'  • Kamar Sesuai Budget Anda: {rooms_str}<br>'
-                f'  • Fasilitas: {", ".join(h["amenities"][:4])}'
+                f'  • Matching Rooms: {rooms_str}<br>'
+                f'  • Key Amenities: {", ".join(h["amenities"][:4])}'
             )
         return (
-            f'Berikut rekomendasi properti & suite mewah dengan tarif <b class="text-gold-300">di atas {fmt_rp(min_budget)}</b>/malam ✦<br><br>'
+            f'Here are our luxury properties & suites priced <b class="text-gold-300">above {fmt_rp(min_budget)}</b>/night ✦<br><br>'
             + "<br><br>".join(blocks)
-            + "<br><br>Silakan klik tombol <b class=\"text-gold-300\">Lanjut Pemesanan →</b> pada kartu di bawah untuk memilih kamar."
+            + '<br><br>Click <b class="text-gold-300">Book Now →</b> on any card below to select your room.'
         )
 
     if budget_mode == "around" and target_budget is not None:
@@ -270,51 +267,51 @@ def generate_smart_rag_response(user_message: str, rag: Dict[str, Any]) -> str:
             if not near_rooms:
                 near_rooms = [min(h["rooms"], key=lambda r: abs(r["price"] - target_budget))]
             rooms_str = ", ".join(
-                f'<b>{r["name"]}</b> (<b class="text-gold-300">{fmt_rp(r["price"])}</b>/malam)'
+                f'<b>{r["name"]}</b> (<b class="text-gold-300">{fmt_rp(r["price"])}</b>/night)'
                 for r in near_rooms
             )
             blocks.append(
                 f'✦ <b class="text-gold-300">{h["name"]}</b> — {h["location"]} (★ {h["rating"]})<br>'
-                f'  • Tipe Kamar Rekomendasi: {rooms_str}<br>'
-                f'  • Fasilitas Utama: {", ".join(h["amenities"][:4])}'
+                f'  • Recommended Rooms: {rooms_str}<br>'
+                f'  • Key Amenities: {", ".join(h["amenities"][:4])}'
             )
         return (
-            f'Untuk kisaran harga <b class="text-gold-300">{fmt_rp(target_budget)}</b>/malam, berikut pilihan kamar & properti yang paling sesuai untuk Anda ✦<br><br>'
+            f'For a budget around <b class="text-gold-300">{fmt_rp(target_budget)}</b>/night, here are the best-matching rooms & properties ✦<br><br>'
             + "<br><br>".join(blocks)
-            + "<br><br>Klik tombol <b class=\"text-gold-300\">Lanjut Pemesanan →</b> pada kartu di bawah untuk langsung memesan."
+            + '<br><br>Click <b class="text-gold-300">Book Now →</b> on any card below to reserve your stay.'
         )
 
     if budget_mode == "below" and max_budget is not None:
         if not matched:
             cheapest = min(rag["all_hotels"], key=lambda x: x["price"])
             return (
-                f'Saat ini belum tersedia kamar di bawah <b class="text-gold-300">{fmt_rp(max_budget)}</b>/malam. '
-                f'Tarif terbaik kami mulai dari <b class="text-gold-300">{fmt_rp(cheapest["price"])}</b>/malam di <b>{cheapest["name"]}</b> ({cheapest["location"]}).'
+                f'We currently do not have rooms under <b class="text-gold-300">{fmt_rp(max_budget)}</b>/night. '
+                f'Our best starting rate is <b class="text-gold-300">{fmt_rp(cheapest["price"])}</b>/night at <b>{cheapest["name"]}</b> ({cheapest["location"]}).'
             )
         blocks = []
         for h in matched:
             eligible_rooms = [r for r in h["rooms"] if r["price"] <= max_budget]
             rooms_str = ", ".join(
-                f'<b>{r["name"]}</b> (<b class="text-gold-300">{fmt_rp(r["price"])}</b>/malam)'
+                f'<b>{r["name"]}</b> (<b class="text-gold-300">{fmt_rp(r["price"])}</b>/night)'
                 for r in (eligible_rooms or h["rooms"][:1])
             )
             blocks.append(
                 f'✦ <b class="text-gold-300">{h["name"]}</b> — {h["location"]} (★ {h["rating"]})<br>'
-                f'  • Pilihan Kamar: {rooms_str}<br>'
-                f'  • Fasilitas Utama: {", ".join(h["amenities"][:4])}'
+                f'  • Room Options: {rooms_str}<br>'
+                f'  • Key Amenities: {", ".join(h["amenities"][:4])}'
             )
         return (
-            f'Berikut rekomendasi properti bintang lima dengan tarif <b class="text-gold-300">di bawah {fmt_rp(max_budget)}</b>/malam ✦<br><br>'
+            f'Here are our five-star properties with rates <b class="text-gold-300">under {fmt_rp(max_budget)}</b>/night ✦<br><br>'
             + "<br><br>".join(blocks)
-            + "<br><br>Klik kartu hotel di bawah untuk melihat detail atau langsung memesan."
+            + "<br><br>Click any hotel card below to view details or book directly."
         )
 
     # 8. General Hotel Recommendations / Comparisons
     if matched:
         if len(matched) > 1:
-            header = 'Berikut kurasi properti terbaik dari <b class="text-gold-300">Aurelia Collection</b> yang sesuai dengan kriteria Anda ✦<br><br>'
+            header = 'Here is our curated selection of <b class="text-gold-300">Aurelia Collection</b> properties tailored to your preferences ✦<br><br>'
         else:
-            header = f'Pilihan istimewa untuk Anda di <b class="text-gold-300">{matched[0]["city"]}</b> ✦<br><br>'
+            header = f'An exceptional choice for your stay in <b class="text-gold-300">{matched[0]["city"]}</b> ✦<br><br>'
 
         blocks = []
         for h in matched:
@@ -323,37 +320,36 @@ def generate_smart_rag_response(user_message: str, rag: Dict[str, Any]) -> str:
             )
             blocks.append(
                 f'✦ <b class="text-gold-300">{h["name"]}</b> — {h["location"]} (★ {h["rating"]})<br>'
-                f'  Mulai <b class="text-gold-300">{fmt_rp(h["price"])}</b>/malam<br>'
-                f'  • Fasilitas Utama: {", ".join(h["amenities"][:4])}<br>'
-                f'  • Pilihan Kamar: {rooms_preview}'
+                f'  Starting from <b class="text-gold-300">{fmt_rp(h["price"])}</b>/night<br>'
+                f'  • Key Amenities: {", ".join(h["amenities"][:4])}<br>'
+                f'  • Room Options: {rooms_preview}'
             )
         return (
             header
             + "<br><br>".join(blocks)
-            + "<br><br>Anda dapat mengklik kartu hotel di bawah untuk melihat galeri lengkap atau memesan kamar secara langsung."
+            + "<br><br>Click any hotel card below to explore the full gallery or proceed to booking."
         )
 
     # 9. Greeting / Thanks
-    if any(k in text for k in ["halo", "hai", "hi", "hello", "selamat", "pagi", "siang", "sore", "malam", "p", "min", "kak"]):
+    if any(k in text for k in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "halo", "hai"]):
         return (
-            'Selamat datang di <b class="text-gold-300">Aurelia Collection</b> ✦<br><br>'
-            'Saya Aurelia Concierge. Silakan ceritakan rencana menginap Anda — misalnya destinasi (Bali, Ubud, Jakarta, Singapore, Maldives, Dubai), kisaran budget (misal: <i>"harga 5jt"</i> atau <i>"di atas 4 juta"</i>), atau jumlah malam menginap!'
+            'Welcome to <b class="text-gold-300">Aurelia Collection</b> ✦<br><br>'
+            'I am your Aurelia Concierge. Tell me about your travel plans — such as your preferred destination (Bali, Ubud, Jakarta, Singapore, Maldives, Dubai), target budget (e.g. <i>"around 5m"</i> or <i>"above 4 million"</i>), or number of nights!'
         )
 
-    if any(k in text for k in ["terima kasih", "thanks", "makasih", "mantap", "oke", "ok", "sip", "thank"]):
+    if any(k in text for k in ["thank", "thanks", "awesome", "great", "ok", "okay", "terima kasih", "makasih"]):
         return (
-            'Dengan senang hati ✦ Merupakan kehormatan bagi saya membantu perjalanan Anda. '
-            'Jangan ragu menghubungi saya kapan saja jika memerlukan bantuan tambahan.'
+            'It is my absolute pleasure ✦ I am always at your service whenever you need assistance with your stay.'
         )
 
     # Default comprehensive response
     return (
-        'Terima kasih atas pertanyaan Anda ✦ Sebagai <b class="text-gold-300">Aurelia Concierge</b>, saya siap membantu Anda dengan:<br><br>'
-        '• <b>Rekomendasi Sesuai Budget</b> (contoh: <i>"rekomendasi harga 5jt"</i>, <i>"budget di atas 4 juta"</i>, atau <i>"di bawah 3 juta"</i>)<br>'
-        '• <b>Rekomendasi Destinasi</b> di Bali, Ubud, Jakarta, Singapore, Maldives, dan Dubai<br>'
-        '• <b>Simulasi Biaya Menginap</b> otomatis lengkap dengan Pajak (11%) & Service (5%)<br>'
-        '• <b>Pengecekan Status Reservasi</b> & Kode Booking aktif Anda<br><br>'
-        'Kamar atau kisaran budget berapa yang sedang Anda cari?'
+        'Thank you for your inquiry ✦ As your <b class="text-gold-300">Aurelia Concierge</b>, I can assist you with:<br><br>'
+        '• <b>Budget-Tailored Recommendations</b> (e.g., <i>"recommend around 5m"</i>, <i>"budget above 4 million"</i>, or <i>"under 2.5 million"</i>)<br>'
+        '• <b>Destination Curation</b> across Bali, Ubud, Jakarta, Singapore, Maldives, and Dubai<br>'
+        '• <b>Instant Stay Quotes</b> complete with 11% VAT & 5% Service Charge<br>'
+        '• <b>Reservation Lookup</b> & active booking codes<br><br>'
+        'Which destination or budget range are you considering for your next stay?'
     )
 
 
@@ -364,8 +360,8 @@ async def generate_llm_reply(
     rag: Dict[str, Any],
 ) -> Tuple[str, str, str]:
     """
-    Mengeksekusi panggilan ke provider LLM terpilih (membaca ulang backend/.env otomatis).
-    Jika provider eksternal tidak dikonfigurasi atau gagal, otomatis fallback ke Smart RAG Engine.
+    Executes call to the configured LLM provider (auto-reloading backend/.env).
+    Falls back gracefully to Smart RAG Engine if external provider is unconfigured or unreachable.
     """
     reload_env_config()
     p = runtime_config.provider.lower()
@@ -405,7 +401,7 @@ async def generate_llm_reply(
         fallback_reply = generate_smart_rag_response(user_message, rag)
         return (
             fallback_reply,
-            f"smart_fallback (fallback dari {p}: {type(exc).__name__})",
+            f"smart_fallback (fallback from {p}: {type(exc).__name__})",
             "aurelia-rag-concierge-v2",
         )
 

@@ -24,16 +24,16 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
             IMG("photo-1520250497591-112f2f40a3f4", 900),
             IMG("photo-1611892440504-42a792e24d32", 900),
         ],
-        "description": "Berada di tepi pantai Nusa Dua yang berpasir putih, The Grand Azure menghadirkan 88 suite dan vila pribadi dengan kolam renang infinity menghadap Samudra Hindia. Nikmati spa tradisional Bali, restoran fine dining, dan layanan butler 24 jam yang siap memenuhi setiap kebutuhan Anda.",
+        "description": "Set along the pristine white-sand beaches of Nusa Dua, The Grand Azure features 88 private suites and villas with infinity pools overlooking the Indian Ocean. Enjoy authentic Balinese spa rituals, world-class fine dining, and 24-hour personal butler service tailored to your every wish.",
         "amenities": [
-            "Kolam Infinity",
+            "Infinity Pool",
             "Spa & Wellness",
-            "Pantai Privat",
+            "Private Beach",
             "Fine Dining",
-            "Butler 24/7",
-            "Wi-Fi Cepat",
-            "Pusat Kebugaran",
-            "Antar-Jemput Bandara",
+            "24/7 Butler",
+            "High-Speed Wi-Fi",
+            "Fitness Center",
+            "Airport Transfer",
         ],
         "rooms": [
             {
@@ -44,7 +44,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 2,
                 "image": IMG("photo-1611892440504-42a792e24d32", 800),
-                "perks": ["Sarapan", "Ocean View"],
+                "perks": ["Breakfast", "Ocean View"],
             },
             {
                 "id": "r2",
@@ -54,17 +54,17 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 3,
                 "image": IMG("photo-1590490360182-c33d57733427", 800),
-                "perks": ["Sarapan", "Lounge Access", "Bathtub"],
+                "perks": ["Breakfast", "Lounge Access", "Bathtub"],
             },
             {
                 "id": "r3",
                 "name": "Private Pool Villa",
                 "price": 6800000,
                 "size": "140 m²",
-                "bed": "2 King Bed",
+                "bed": "2 King Beds",
                 "max": 4,
                 "image": IMG("photo-1631049307264-da0ec9d70304", 800),
-                "perks": ["Sarapan", "Private Pool", "Butler"],
+                "perks": ["Breakfast", "Private Pool", "Butler"],
             },
         ],
     },
@@ -84,16 +84,16 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
             IMG("photo-1611892440504-42a792e24d32", 900),
             IMG("photo-1590490360182-c33d57733427", 900),
         ],
-        "description": "Menara ikonik di jantung Sudirman dengan panorama skyline Jakarta dari lantai 42. Aurora Sky Palace menawarkan kamar dengan jendela floor-to-ceiling, rooftop bar, dan akses langsung ke pusat bisnis SCBD.",
+        "description": "An iconic architectural tower in the heart of Sudirman offering sweeping Jakarta skyline panoramas from the 42nd floor. Aurora Sky Palace delivers floor-to-ceiling windows, an acclaimed rooftop bar, and direct access to the SCBD financial district.",
         "amenities": [
             "Rooftop Bar",
-            "Kolam Indoor",
+            "Indoor Pool",
             "Business Center",
-            "Spa",
-            "Restoran",
-            "Wi-Fi Cepat",
-            "Parkir Valet",
-            "Meeting Room",
+            "Luxury Spa",
+            "Signature Restaurant",
+            "High-Speed Wi-Fi",
+            "Valet Parking",
+            "Boardrooms",
         ],
         "rooms": [
             {
@@ -104,7 +104,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "Queen Bed",
                 "max": 2,
                 "image": IMG("photo-1590490360182-c33d57733427", 800),
-                "perks": ["Sarapan", "City View"],
+                "perks": ["Breakfast", "City View"],
             },
             {
                 "id": "r2",
@@ -114,7 +114,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 3,
                 "image": IMG("photo-1611892440504-42a792e24d32", 800),
-                "perks": ["Sarapan", "Lounge Access", "Work Desk"],
+                "perks": ["Breakfast", "Lounge Access", "Work Desk"],
             },
         ],
     },
@@ -134,16 +134,16 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
             IMG("photo-1566073771259-6a8506099945", 900),
             IMG("photo-1445019980597-93fa8acb246c", 900),
         ],
-        "description": "Tersembunyi di antara sawah terasering Tegallalang, Villa Serenity adalah retret ketenangan dengan 24 vila pribadi. Setiap vila memiliki kolam renang pribadi menghadap lembah hijau dan balkon untuk menikmati matahari terbit.",
+        "description": "Tucked away amidst the emerald rice terraces of Tegallalang, Villa Serenity is a tranquil sanctuary of 24 private sanctuaries. Each villa boasts a heated plunge pool overlooking lush jungle valleys and sunrise decks.",
         "amenities": [
             "Private Pool",
             "Yoga Pavilion",
             "Organic Restaurant",
-            "Spa",
+            "Holistic Spa",
             "Trekking Guide",
-            "Wi-Fi",
-            "Parkir",
-            "Antar-Jemput",
+            "High-Speed Wi-Fi",
+            "Private Parking",
+            "Shuttle Service",
         ],
         "rooms": [
             {
@@ -154,7 +154,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 2,
                 "image": IMG("photo-1631049307264-da0ec9d70304", 800),
-                "perks": ["Sarapan", "Garden View"],
+                "perks": ["Breakfast", "Garden View"],
             },
             {
                 "id": "r2",
@@ -164,7 +164,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 3,
                 "image": IMG("photo-1571896349842-33c89424de2d", 800),
-                "perks": ["Sarapan", "Private Pool", "Valley View"],
+                "perks": ["Breakfast", "Private Pool", "Valley View"],
             },
         ],
     },
@@ -184,15 +184,15 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
             IMG("photo-1611892440504-42a792e24d32", 900),
             IMG("photo-1590490360182-c33d57733427", 900),
         ],
-        "description": "Ikon Marina Bay dengan arsitektur marmer dan kaca. The Marble Crown menawarkan pemandangan teluk spektakuler, infinity pool di lantai 57, serta koleksi seni kontemporer di seluruh area hotel.",
+        "description": "A Marina Bay landmark crafted from Italian marble and glass. The Marble Crown offers breathtaking bay views, a 57th-floor sky infinity pool, and a curated museum-grade contemporary art collection.",
         "amenities": [
             "Infinity Pool",
             "Sky Bar",
             "Michelin Dining",
-            "Spa",
-            "Gym 24 Jam",
-            "Wi-Fi",
-            "Concierge",
+            "Luxury Spa",
+            "24-Hour Gym",
+            "High-Speed Wi-Fi",
+            "24/7 Concierge",
             "Business Center",
         ],
         "rooms": [
@@ -204,7 +204,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 2,
                 "image": IMG("photo-1590490360182-c33d57733427", 800),
-                "perks": ["Sarapan", "Bay View"],
+                "perks": ["Breakfast", "Bay View"],
             },
             {
                 "id": "r2",
@@ -214,7 +214,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 3,
                 "image": IMG("photo-1611892440504-42a792e24d32", 800),
-                "perks": ["Sarapan", "Skyline View", "Club Access"],
+                "perks": ["Breakfast", "Skyline View", "Club Access"],
             },
         ],
     },
@@ -234,15 +234,15 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
             IMG("photo-1631049307264-da0ec9d70304", 900),
             IMG("photo-1566073771259-6a8506099945", 900),
         ],
-        "description": "Resor overwater paling ikonik di Maladewa. 42 vila di atas laguna kristal dengan kaca lantai, dek pribadi, dan akses langsung ke terumbu karang. Termasuk seaplane transfer dan private chef.",
+        "description": "The Maldives' most iconic overwater sanctuary. 42 villas suspended above a crystal lagoon featuring glass floor panels, private sundecks, and direct coral reef access. Includes private seaplane transfers and a personal chef.",
         "amenities": [
             "Overwater Villa",
             "Private Chef",
             "House Reef",
             "Seaplane Transfer",
-            "Spa Overwater",
+            "Overwater Spa",
             "Diving Center",
-            "Wi-Fi",
+            "High-Speed Wi-Fi",
             "All-Inclusive",
         ],
         "rooms": [
@@ -284,15 +284,15 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
             IMG("photo-1611892440504-42a792e24d32", 900),
             IMG("photo-1520250497591-112f2f40a3f4", 900),
         ],
-        "description": "Menghadap Burj Khalifa, Obsidian Heights adalah mahakarya arsitektur modern Dubai. Nikmati rooftop infinity pool, lounge eksklusif, dan koleksi restoran dari chef bintang Michelin.",
+        "description": "Directly facing the Burj Khalifa, Obsidian Heights is a masterpiece of modern Dubai luxury. Experience our sky-high rooftop infinity pool, private members' lounge, and Michelin-starred culinary destinations.",
         "amenities": [
             "Rooftop Pool",
             "Burj View",
             "Michelin Dining",
-            "Spa",
+            "Royal Spa",
             "Luxury Shopping",
-            "Wi-Fi",
-            "Valet",
+            "High-Speed Wi-Fi",
+            "Valet Service",
             "Kids Club",
         ],
         "rooms": [
@@ -304,7 +304,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 2,
                 "image": IMG("photo-1611892440504-42a792e24d32", 800),
-                "perks": ["Sarapan", "Burj View"],
+                "perks": ["Breakfast", "Burj View"],
             },
             {
                 "id": "r2",
@@ -314,7 +314,7 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
                 "bed": "King Bed",
                 "max": 4,
                 "image": IMG("photo-1590490360182-c33d57733427", 800),
-                "perks": ["Sarapan", "Lounge Access", "Butler", "Panoramic"],
+                "perks": ["Breakfast", "Lounge Access", "Butler", "Panoramic"],
             },
         ],
     },
@@ -346,7 +346,6 @@ def init_db() -> None:
         """
     )
 
-    # Ensure 'role' column exists if upgrading from older table
     cur.execute("PRAGMA table_info(users)")
     cols = [r["name"] for r in cur.fetchall()]
     if "role" not in cols:
@@ -394,7 +393,7 @@ def init_db() -> None:
             guest_phone TEXT NOT NULL,
             guest_country TEXT NOT NULL,
             requests TEXT DEFAULT '',
-            payment_method TEXT DEFAULT 'Kartu Kredit',
+            payment_method TEXT DEFAULT 'Credit Card',
             subtotal INTEGER NOT NULL,
             tax INTEGER NOT NULL,
             service INTEGER NOT NULL,
@@ -459,33 +458,31 @@ def init_db() -> None:
     else:
         cur.execute("UPDATE users SET role = 'admin' WHERE email = 'admin@aurelia.com'")
 
-    # Seed Hotels
-    cur.execute("SELECT COUNT(*) as cnt FROM hotels")
-    if cur.fetchone()["cnt"] == 0:
-        for h in INITIAL_HOTELS:
-            cur.execute(
-                """
-                INSERT INTO hotels (
-                    id, name, city, location, rating, reviews, stars, price,
-                    image, gallery_json, description, amenities_json, rooms_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    h["id"],
-                    h["name"],
-                    h["city"],
-                    h["location"],
-                    h["rating"],
-                    h["reviews"],
-                    h["stars"],
-                    h["price"],
-                    h["image"],
-                    json.dumps(h["gallery"]),
-                    h["description"],
-                    json.dumps(h["amenities"]),
-                    json.dumps(h["rooms"]),
-                ),
-            )
+    # Upsert Hotels so descriptions, amenities, and room perks are in English
+    for h in INITIAL_HOTELS:
+        cur.execute(
+            """
+            INSERT OR REPLACE INTO hotels (
+                id, name, city, location, rating, reviews, stars, price,
+                image, gallery_json, description, amenities_json, rooms_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                h["id"],
+                h["name"],
+                h["city"],
+                h["location"],
+                h["rating"],
+                h["reviews"],
+                h["stars"],
+                h["price"],
+                h["image"],
+                json.dumps(h["gallery"]),
+                h["description"],
+                json.dumps(h["amenities"]),
+                json.dumps(h["rooms"]),
+            ),
+        )
 
     conn.commit()
     conn.close()

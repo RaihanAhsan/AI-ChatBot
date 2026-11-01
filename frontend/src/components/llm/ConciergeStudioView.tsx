@@ -62,7 +62,7 @@ export default function ConciergeStudioView({
             Aurelia <span className="gold-shimmer">Concierge</span>
           </h1>
           <p className="mt-2 max-w-2xl text-xs leading-relaxed text-white/45">
-            Tanyakan rekomendasi destinasi mewah, simulasi rincian tarif kamar, promo aktif, atau status reservasi Anda.
+            Ask for luxury destination recommendations, room rate calculations, active promotions, or your reservation status.
           </p>
         </div>
 
@@ -71,7 +71,7 @@ export default function ConciergeStudioView({
           onClick={onResetChat}
           className="rounded-xl border border-white/15 px-4 py-2.5 text-xs text-white/60 transition hover:border-gold-400/50 hover:text-gold-300"
         >
-          Percakapan Baru
+          New Conversation
         </button>
       </div>
 
@@ -90,7 +90,7 @@ export default function ConciergeStudioView({
         {/* Preset Questions */}
         <div className="border-b border-white/5 bg-ink-900/40 px-6 py-3">
           <p className="mb-2 text-[10px] uppercase tracking-widest text-white/35">
-            Topik Populer:
+            Popular Topics:
           </p>
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             {(llmState?.presets || []).map((preset) => (
@@ -143,7 +143,7 @@ export default function ConciergeStudioView({
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div>
                             <span className="text-[10px] uppercase tracking-widest text-gold-400">
-                              ✦ RINCIAN ESTIMASI PEMESANAN
+                              ✦ ESTIMATED BOOKING BREAKDOWN
                             </span>
                             <h4 className="font-serif text-lg text-white">
                               {m.priceQuote.hotelName} — {m.priceQuote.roomName}
@@ -156,7 +156,7 @@ export default function ConciergeStudioView({
                         <div className="my-3 grid grid-cols-3 gap-2 rounded-xl bg-white/[.04] p-3 text-xs">
                           <div>
                             <p className="text-[10px] text-white/40">
-                              Subtotal ({m.priceQuote.nights} mlm)
+                              Subtotal ({m.priceQuote.nights} nights)
                             </p>
                             <p className="font-medium text-white/85">
                               {fmtRp(m.priceQuote.subtotal)}
@@ -164,7 +164,7 @@ export default function ConciergeStudioView({
                           </div>
                           <div>
                             <p className="text-[10px] text-white/40">
-                              Pajak PPN (11%)
+                              VAT Tax (11%)
                             </p>
                             <p className="font-medium text-white/85">
                               {fmtRp(m.priceQuote.tax)}
@@ -184,7 +184,7 @@ export default function ConciergeStudioView({
                           onClick={() => onStartQuoteBooking(m.priceQuote!)}
                           className="btn-gold w-full py-2.5 text-xs"
                         >
-                          Lanjut ke Pemesanan Kamar Ini →
+                          Proceed to Book This Room →
                         </button>
                       </div>
                     )}
@@ -224,7 +224,7 @@ export default function ConciergeStudioView({
                                 <span className="font-serif text-sm text-gold-300">
                                   {fmtRp(h.price)}
                                   <span className="font-sans text-[10px] text-white/35">
-                                    /malam
+                                    /night
                                   </span>
                                 </span>
                               </div>
@@ -234,14 +234,14 @@ export default function ConciergeStudioView({
                                   onClick={() => onSelectHotel(h.id)}
                                   className="flex-1 rounded-xl border border-white/15 py-1.5 text-[11px] text-white/75 transition hover:border-gold-400/50 hover:text-gold-300"
                                 >
-                                  Lihat Kamar
+                                  View Rooms
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => onQuickBookHotel(h.id)}
                                   className="flex-1 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 py-1.5 text-[11px] font-semibold text-ink-900 transition hover:opacity-95"
                                 >
-                                  Lanjut Pemesanan →
+                                  Book Now →
                                 </button>
                               </div>
                             </div>
@@ -305,7 +305,7 @@ export default function ConciergeStudioView({
                   handleSend();
                 }
               }}
-              placeholder="Tanyakan rekomendasi hotel, kamar, atau rincian biaya menginap…"
+              placeholder="Ask for hotel recommendations, room types, or stay price quotes…"
               className="input-field resize-none text-sm"
             />
             <button
@@ -314,7 +314,7 @@ export default function ConciergeStudioView({
               disabled={isTyping}
               className="btn-gold h-12 shrink-0 px-6 text-sm"
             >
-              Kirim
+              Send
             </button>
           </div>
         </div>

@@ -31,7 +31,7 @@ def _row_to_booking_resp(r) -> BookingResponse:
         guestPhone=r["guest_phone"],
         guestCountry=r["guest_country"],
         requests=r["requests"] or "",
-        paymentMethod=r["payment_method"] or "Kartu Kredit",
+        paymentMethod=r["payment_method"] or "Credit Card",
         subtotal=r["subtotal"],
         tax=r["tax"],
         service=r["service"],
@@ -67,11 +67,11 @@ def list_bookings(
 def create_booking(payload: CreateBookingRequest):
     hotel = get_hotel_by_id(payload.hotelId)
     if not hotel:
-        raise HTTPException(status_code=404, detail="Hotel tidak ditemukan")
+        raise HTTPException(status_code=404, detail="Hotel not found")
 
     room = next((r for r in hotel["rooms"] if r["id"] == payload.roomId), None)
     if not room:
-        raise HTTPException(status_code=404, detail="Tipe kamar tidak ditemukan")
+        raise HTTPException(status_code=404, detail="Room type not found")
 
     try:
         ci = date.fromisoformat(payload.checkIn)
@@ -82,7 +82,7 @@ def create_booking(payload: CreateBookingRequest):
 
     if nights <= 0:
         raise HTTPException(
-            status_code=400, detail="Tanggal check-out harus setelah check-in"
+            status_code=400, detail="Check-out date must be after check-in date"
         )
 
     subtotal = room["price"] * nights
@@ -153,5 +153,5 @@ def update_booking_status(booking_id: str, status: str = Query(...)):
     row = cur.fetchone()
     conn.close()
     if not row:
-        raise HTTPException(status_code=404, detail="Reservasi tidak ditemukan")
+        raise HTTPException(status_code=404, detail="Booking not found")
     return _row_to_booking_resp(row)

@@ -48,11 +48,11 @@ export default function LoginPage() {
     const pass = loginPass.trim();
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      setErrorMsg("Silakan masukkan alamat email yang valid.");
+      setErrorMsg("Please enter a valid email address.");
       return;
     }
     if (!pass) {
-      setErrorMsg("Password wajib diisi.");
+      setErrorMsg("Password is required.");
       return;
     }
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
     } catch (err: any) {
       setErrorMsg(
         err.message ||
-          "Email atau password salah. Silakan daftar akun jika belum memiliki akun."
+          "Invalid email or password. Please create an account if you are new."
       );
     } finally {
       setLoading(false);
@@ -83,19 +83,19 @@ export default function LoginPage() {
     const confirm = regConfirmPass.trim();
 
     if (!name || name.length < 2) {
-      setErrorMsg("Nama lengkap wajib diisi (minimal 2 karakter).");
+      setErrorMsg("Full name is required (at least 2 characters).");
       return;
     }
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      setErrorMsg("Format alamat email tidak valid.");
+      setErrorMsg("Please enter a valid email address.");
       return;
     }
     if (!pass || pass.length < 4) {
-      setErrorMsg("Password minimal 4 karakter.");
+      setErrorMsg("Password must be at least 4 characters.");
       return;
     }
     if (pass !== confirm) {
-      setErrorMsg("Konfirmasi password tidak cocok.");
+      setErrorMsg("Password confirmation does not match.");
       return;
     }
 
@@ -108,11 +108,10 @@ export default function LoginPage() {
         city,
         password: pass,
       });
-      // Automatically log in the newly registered user & redirect to dashboard
       saveAuthSession(profile);
       router.replace("/dashboard");
     } catch (err: any) {
-      setErrorMsg(err.message || "Gagal mendaftarkan akun.");
+      setErrorMsg(err.message || "Failed to register account.");
     } finally {
       setLoading(false);
     }
@@ -166,16 +165,16 @@ export default function LoginPage() {
               <span className="gold-shimmer">a legend.</span>
             </h1>
             <p className="mt-7 max-w-sm text-sm leading-relaxed text-white/55 animate-fade-up">
-              Koleksi hotel bintang lima di destinasi paling istimewa di dunia.
-              Layanan butler 24 jam, spa eksklusif, dan pengalaman yang tak
-              terlupakan.
+              A curated collection of five-star hotels in the world&apos;s most
+              extraordinary destinations. 24-hour personal butler service,
+              bespoke spas, and unforgettable stays.
             </p>
 
             <div className="mt-10 flex items-center gap-6 animate-fade-up">
               <div>
                 <p className="font-serif text-2xl text-gold-300">120+</p>
                 <p className="text-[11px] tracking-widest text-white/40">
-                  PROPERTI
+                  PROPERTIES
                 </p>
               </div>
               <div className="h-8 w-px bg-white/15"></div>
@@ -189,7 +188,7 @@ export default function LoginPage() {
               <div>
                 <p className="font-serif text-2xl text-gold-300">38</p>
                 <p className="text-[11px] tracking-widest text-white/40">
-                  NEGARA
+                  COUNTRIES
                 </p>
               </div>
             </div>
@@ -221,7 +220,7 @@ export default function LoginPage() {
                   : "text-white/50 hover:text-white"
               }`}
             >
-              Masuk Akun
+              Sign In
             </button>
             <button
               type="button"
@@ -235,20 +234,21 @@ export default function LoginPage() {
                   : "text-white/50 hover:text-white"
               }`}
             >
-              Daftar Akun Baru
+              Create Account
             </button>
           </div>
 
           {mode === "login" ? (
             <>
               <p className="text-[11px] tracking-[.35em] text-gold-400 mb-2">
-                SELAMAT DATANG KEMBALI
+                WELCOME BACK
               </p>
               <h2 className="font-serif text-4xl text-white mb-2">
-                Masuk ke akun Anda
+                Sign in to your account
               </h2>
               <p className="text-sm text-white/40 mb-7">
-                Akses reservasi, poin reward, dan layanan concierge eksklusif.
+                Access your reservations, reward points, and 24/7 personal
+                concierge service.
               </p>
 
               <form onSubmit={handleLogin} className="space-y-4" noValidate>
@@ -258,7 +258,7 @@ export default function LoginPage() {
                     type="email"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="nama@email.com"
+                    placeholder="name@email.com"
                     className="input-field"
                     required
                   />
@@ -280,7 +280,7 @@ export default function LoginPage() {
                       onClick={() => setShowPwd(!showPwd)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/40 hover:text-gold-300"
                     >
-                      {showPwd ? "Sembunyi" : "Lihat"}
+                      {showPwd ? "Hide" : "Show"}
                     </button>
                   </div>
                 </div>
@@ -296,12 +296,12 @@ export default function LoginPage() {
                   disabled={loading}
                   className="btn-gold w-full py-3.5 text-sm tracking-wide"
                 >
-                  {loading ? "Memverifikasi…" : "Masuk Sekarang →"}
+                  {loading ? "Verifying…" : "Sign In Now →"}
                 </button>
               </form>
 
               <p className="mt-6 text-center text-xs text-white/40">
-                Belum punya akun?{" "}
+                Don&apos;t have an account?{" "}
                 <button
                   type="button"
                   onClick={() => {
@@ -310,14 +310,14 @@ export default function LoginPage() {
                   }}
                   className="font-medium text-gold-400 hover:text-gold-300 underline"
                 >
-                  Daftar gratis di sini
+                  Register for free here
                 </button>
               </p>
 
               {/* Quick Fill Helper for Testing Demo Account */}
               <div className="mt-7 rounded-2xl border border-white/10 bg-white/[.02] p-3.5 text-center">
                 <p className="text-[11px] text-white/35">
-                  Akun demo terdaftar:{" "}
+                  Registered demo account:{" "}
                   <button
                     type="button"
                     onClick={() => {
@@ -335,24 +335,23 @@ export default function LoginPage() {
           ) : (
             <>
               <p className="text-[11px] tracking-[.35em] text-gold-400 mb-2">
-                KEANGGOTAAN EKSKLUSIF
+                EXCLUSIVE MEMBERSHIP
               </p>
               <h2 className="font-serif text-4xl text-white mb-2">
-                Buat Akun Baru
+                Create New Account
               </h2>
               <p className="text-sm text-white/40 mb-6">
-                Daftar sebagai Gold Member dan langsung nikmati kemudahan
-                reservasi.
+                Join as a Gold Member and enjoy seamless luxury reservations.
               </p>
 
               <form onSubmit={handleRegister} className="space-y-4" noValidate>
                 <div>
-                  <label className="label-xs">Nama Lengkap *</label>
+                  <label className="label-xs">Full Name *</label>
                   <input
                     type="text"
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    placeholder="Nama sesuai KTP / Paspor"
+                    placeholder="Full name as on ID / Passport"
                     className="input-field"
                     required
                   />
@@ -365,13 +364,13 @@ export default function LoginPage() {
                       type="email"
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="nama@email.com"
+                      placeholder="name@email.com"
                       className="input-field"
                       required
                     />
                   </div>
                   <div>
-                    <label className="label-xs">No. Telepon *</label>
+                    <label className="label-xs">Phone Number *</label>
                     <input
                       type="tel"
                       value={regPhone}
@@ -384,7 +383,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="label-xs">Kota / Domisili</label>
+                  <label className="label-xs">City / Country</label>
                   <input
                     type="text"
                     value={regCity}
@@ -401,18 +400,18 @@ export default function LoginPage() {
                       type="password"
                       value={regPass}
                       onChange={(e) => setRegPass(e.target.value)}
-                      placeholder="Min. 4 karakter"
+                      placeholder="Min. 4 characters"
                       className="input-field"
                       required
                     />
                   </div>
                   <div>
-                    <label className="label-xs">Konfirmasi Password *</label>
+                    <label className="label-xs">Confirm Password *</label>
                     <input
                       type="password"
                       value={regConfirmPass}
                       onChange={(e) => setRegConfirmPass(e.target.value)}
-                      placeholder="Ulangi password"
+                      placeholder="Repeat password"
                       className="input-field"
                       required
                     />
@@ -431,13 +430,13 @@ export default function LoginPage() {
                   className="btn-gold w-full py-3.5 text-sm tracking-wide"
                 >
                   {loading
-                    ? "Mendaftarkan Akun…"
-                    : "Daftar & Masuk ke Dashboard →"}
+                    ? "Creating Account…"
+                    : "Register & Continue to Dashboard →"}
                 </button>
               </form>
 
               <p className="mt-5 text-center text-xs text-white/40">
-                Sudah punya akun?{" "}
+                Already have an account?{" "}
                 <button
                   type="button"
                   onClick={() => {
@@ -446,7 +445,7 @@ export default function LoginPage() {
                   }}
                   className="font-medium text-gold-400 hover:text-gold-300 underline"
                 >
-                  Masuk di sini
+                  Sign in here
                 </button>
               </p>
             </>

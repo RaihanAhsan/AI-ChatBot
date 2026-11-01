@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Aurelia Collection — Luxury Hotel Booking & AI Concierge",
   description:
-    "Koleksi hotel bintang lima di destinasi paling istimewa di dunia dengan asisten AI Concierge pintar.",
+    "A curated collection of five-star luxury hotels across the world's finest destinations with a 24/7 AI Personal Concierge.",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

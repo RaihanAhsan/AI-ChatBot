@@ -1,7 +1,7 @@
 /**
  * ============================================================================
- * MODUL CLIENT API KHUSUS CHATBOT LLM (Terpisah dari Bisnis Utama)
- * Menghubungkan Frontend Next.js ke Endpoint `/api/llm/*` pada FastAPI Backend
+ * DEDICATED CHATBOT LLM API CLIENT MODULE
+ * Connects Next.js Frontend to `/api/llm/*` endpoints on FastAPI Backend
  * ============================================================================
  */
 import {
@@ -36,7 +36,6 @@ export async function sendLLMChatMessage(
     }
     return await res.json();
   } catch {
-    // Offline fallback if backend server is not yet running
     const lastMsg = messages[messages.length - 1]?.content || "";
     return localSmartFallback(lastMsg);
   }
@@ -58,7 +57,7 @@ export async function fetchLLMConfig(): Promise<LLMConfigState> {
       config: {
         provider: "auto",
         temperature: 0.4,
-        geminiModel: "gemini-2.5-flash",
+        geminiModel: "gemini-3.5-flash",
         hasGeminiKey: false,
         openaiModel: "gpt-4o-mini",
         openaiBaseUrl: "https://api.openai.com/v1",
@@ -72,31 +71,31 @@ export async function fetchLLMConfig(): Promise<LLMConfigState> {
       presets: [
         {
           id: "bali-compare",
-          category: "Rekomendasi & Perbandingan",
-          title: "Bandingkan Hotel di Bali & Ubud",
+          category: "Recommendations",
+          title: "Compare Bali & Ubud Resorts",
           prompt:
-            "Bandingkan hotel di Bali dan Ubud beserta tipe kamar dan fasilitas unggulannya untuk honeymoon.",
+            "Compare your luxury resorts in Bali and Ubud including room types and best honeymoon amenities.",
         },
         {
           id: "quote-calc",
-          category: "Simulasi Biaya",
-          title: "Simulasi Menginap 3 Malam di Maldives",
+          category: "Price Quote",
+          title: "3-Night Stay Quote in Maldives",
           prompt:
-            "Hitung rincian total biaya menginap 3 malam di Lumière Riviera Maldives termasuk pajak 11% dan service 5%.",
+            "Calculate the total cost for a 3-night stay at Lumière Riviera Maldives including 11% tax and 5% service charge.",
         },
         {
           id: "budget-filter",
-          category: "Filter Budget",
-          title: "Hotel Mewah di Bawah Rp 2.500.000",
+          category: "Budget Filter",
+          title: "Luxury Hotels Under Rp 2,500,000",
           prompt:
-            "Rekomendasikan hotel dengan harga kamar mulai di bawah Rp 2.500.000 per malam.",
+            "Recommend five-star hotels with room rates starting under Rp 2,500,000 per night.",
         },
         {
           id: "my-bookings",
-          category: "Reservasi Saya",
-          title: "Cek Status Reservasi Saya",
+          category: "My Bookings",
+          title: "Check My Reservation Status",
           prompt:
-            "Tolong cek daftar reservasi aktif saya beserta kode booking dan total biayanya.",
+            "Please check my active reservations including booking codes and total amount paid.",
         },
       ],
     };
@@ -124,7 +123,7 @@ export async function updateLLMConfig(
   );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Gagal memperbarui konfigurasi LLM");
+    throw new Error(err.detail || "Failed to update LLM configuration");
   }
   return await res.json();
 }
@@ -143,9 +142,9 @@ export async function fetchRAGContextPreview(userEmail = "demo@aurelia.com") {
       hotelsCount: FALLBACK_HOTELS.length,
       userBookingsCount: 0,
       knowledgeText:
-        "=== KATALOG HOTEL RESMI AURELIA COLLECTION ===\n" +
+        "=== OFFICIAL AURELIA COLLECTION HOTEL CATALOG ===\n" +
         FALLBACK_HOTELS.map(
-          (h) => `- [${h.id}] ${h.name} (${h.location}) | Mulai ${fmtRp(h.price)}/malam`
+          (h) => `- [${h.id}] ${h.name} (${h.location}) | From ${fmtRp(h.price)}/night`
         ).join("\n"),
     };
   }
@@ -153,12 +152,20 @@ export async function fetchRAGContextPreview(userEmail = "demo@aurelia.com") {
 
 function localSmartFallback(text: string): LLMChatApiResponse {
   const t = text.toLowerCase();
-  const jutaMatch = t.match(/(\d+(?:[.,]\d+)?)\s*(?:juta|jt|jtan|jutaan)\b/);
-  const amount = jutaMatch
-    ? Math.round(parseFloat(jutaMatch[1].replace(",", ".")) * 1_000_000)
+  const milMatch = t.match(
+    /(\d+(?:[.,]\d+)?)\s*(?:million|mil|m|mio|juta|jt|jtan|jutaan)\b/
+  );
+  const amount = milMatch
+    ? Math.round(parseFloat(milMatch[1].replace(",", ".")) * 1_000_000)
     : null;
-  const isAbove = /di\s*atas|diatas|lebih\s*dari|minimal|ke\s*atas|>/.test(t);
-  const isBelow = /di\s*bawah|dibawah|kurang\s*dari|maksimal|max|<|mentok/.test(t);
+  const isAbove =
+    /above|over|more\s*than|minimum|at\s*least|di\s*atas|diatas|lebih\s*dari|minimal|>/.test(
+      t
+    );
+  const isBelow =
+    /under|below|less\s*than|maximum|up\s*to|di\s*bawah|dibawah|kurang\s*dari|maksimal|max|<|mentok/.test(
+      t
+    );
 
   let matched = FALLBACK_HOTELS.filter(
     (h) =>
@@ -195,7 +202,7 @@ function localSmartFallback(text: string): LLMChatApiResponse {
     matched = FALLBACK_HOTELS.slice(0, 2);
   }
 
-  const nightsMatch = t.match(/(\d+)\s*(malam|malem|mlm|hari|night)/);
+  const nightsMatch = t.match(/(\d+)\s*(nights?|days?|malam|malem|mlm|hari)/);
   const nights = nightsMatch ? Math.max(1, parseInt(nightsMatch[1], 10)) : 2;
   const targetHotel = matched[0] || FALLBACK_HOTELS[0];
   const targetRoom =
@@ -210,39 +217,40 @@ function localSmartFallback(text: string): LLMChatApiResponse {
   const total = subtotal + tax + service;
 
   const showQuote =
-    /hitung|itung|biaya|simulasi|pesan|pesen|booking|maldives|bali/.test(t) ||
-    Boolean(nightsMatch);
+    /calculate|quote|cost|hitung|itung|biaya|simulasi|book|pesan|maldives|bali/.test(
+      t
+    ) || Boolean(nightsMatch);
 
   let reply =
-    'Selamat datang di <b class="text-gold-300">Aurelia Collection</b> ✦<br><br>Saya Aurelia AI Concierge. Saya siap membantu merekomendasikan properti bintang lima sesuai budget Anda, menghitung simulasi biaya kamar (termasuk pajak 11% & service 5%), atau melanjutkan pemesanan Anda.';
+    'Welcome to <b class="text-gold-300">Aurelia Collection</b> ✦<br><br>I am your Aurelia AI Concierge. I can help you find five-star hotels tailored to your budget, calculate full stay quotes (including 11% tax & 5% service), or assist with your reservations.';
 
   if (amount !== null) {
     const label = isAbove
-      ? `di atas ${fmtRp(amount)}`
+      ? `above ${fmtRp(amount)}`
       : isBelow
-      ? `di bawah ${fmtRp(amount)}`
-      : `kisaran ${fmtRp(amount)}`;
+      ? `under ${fmtRp(amount)}`
+      : `around ${fmtRp(amount)}`;
     const listHtml = matched
       .slice(0, 3)
       .map((h) => {
         const bestR = [...h.rooms].sort(
           (a, b) => Math.abs(a.price - amount) - Math.abs(b.price - amount)
         )[0];
-        return `✦ <b class="text-gold-300">${h.name}</b> — ${h.location} (★ ${h.rating})<br>  • Kamar Rekomendasi: <b>${bestR.name}</b> (<b class="text-gold-300">${fmtRp(bestR.price)}</b>/malam)`;
+        return `✦ <b class="text-gold-300">${h.name}</b> — ${h.location} (★ ${h.rating})<br>  • Recommended Room: <b>${bestR.name}</b> (<b class="text-gold-300">${fmtRp(bestR.price)}</b>/night)`;
       })
       .join("<br><br>");
-    reply = `Berikut rekomendasi properti & kamar untuk budget <b class="text-gold-300">${label}</b>/malam ✦<br><br>${listHtml}<br><br>Klik tombol <b class="text-gold-300">Lanjut Pemesanan →</b> pada kartu di bawah untuk langsung memesan.`;
+    reply = `Here are our recommended properties & suites for a budget <b class="text-gold-300">${label}</b>/night ✦<br><br>${listHtml}<br><br>Click <b class="text-gold-300">Book Now →</b> on any card below to reserve your room.`;
   } else if (/bali|ubud/.test(t)) {
     reply =
-      'Untuk Bali, saya merekomendasikan:<br><br>✦ <b class="text-gold-300">The Grand Azure</b> — Nusa Dua, mulai Rp 2.450.000/malam (beachfront + infinity pool)<br>✦ <b class="text-gold-300">Villa Serenity</b> — Ubud, mulai Rp 2.100.000/malam (private pool villa)<br><br>Klik tombol <b class="text-gold-300">Lanjut ke Pemesanan →</b> pada kartu di bawah untuk langsung memesan kamar.';
-  } else if (/maldives|maladewa|hitung/.test(t)) {
-    reply = `Berikut simulasi menginap <b class="text-gold-300">${nights} malam</b> di <b class="text-gold-300">${targetHotel.name}</b> (${targetRoom.name}):<br><br>• Subtotal: ${fmtRp(subtotal)}<br>• Pajak PPN (11%): ${fmtRp(tax)}<br>• Service (5%): ${fmtRp(service)}<br>✦ <b class="text-gold-300">Total: ${fmtRp(total)}</b><br><br>Klik tombol di bawah untuk langsung melanjutkan ke pengisian data tamu.`;
-  } else if (/bayar|payment|pembayaran/.test(t)) {
+      'For Bali, I highly recommend:<br><br>✦ <b class="text-gold-300">The Grand Azure</b> — Nusa Dua, from Rp 2.450.000/night (beachfront + infinity pool)<br>✦ <b class="text-gold-300">Villa Serenity</b> — Ubud, from Rp 2.100.000/night (private pool villa)<br><br>Click <b class="text-gold-300">Book Now →</b> on any card below to proceed to booking.';
+  } else if (/maldives|maladewa|calculate|hitung/.test(t)) {
+    reply = `Here is your <b class="text-gold-300">${nights}-night</b> quote at <b class="text-gold-300">${targetHotel.name}</b> (${targetRoom.name}):<br><br>• Subtotal: ${fmtRp(subtotal)}<br>• VAT Tax (11%): ${fmtRp(tax)}<br>• Service (5%): ${fmtRp(service)}<br>✦ <b class="text-gold-300">Total: ${fmtRp(total)}</b><br><br>Click the button below to proceed directly to guest details.`;
+  } else if (/pay|payment|bayar|pembayaran/.test(t)) {
     reply =
-      "Kami menerima:<br>• Kartu Kredit/Debit (Visa, Mastercard, JCB)<br>• Virtual Account (BCA, Mandiri, BNI, BRI)<br>• E-Wallet (OVO, GoPay, DANA, ShopeePay)<br><br>Semua transaksi dienkripsi SSL 256-bit 🔒";
-  } else if (/batal|refund|cancel/.test(t)) {
+      "We accept:<br>• Credit / Debit Cards (Visa, Mastercard, JCB)<br>• Instant Virtual Account (BCA, Mandiri, BNI, BRI)<br>• Digital Wallets (OVO, GoPay, DANA, ShopeePay)<br><br>All transactions are secured with 256-bit SSL encryption 🔒";
+  } else if (/cancel|refund|batal/.test(t)) {
     reply =
-      "Kebijakan pembatalan kami:<br>• Gratis pembatalan hingga 24 jam sebelum check-in<br>• Pembatalan <24 jam: dikenakan 1 malam<br>• Refund diproses 3–7 hari kerja.";
+      "Our cancellation policy:<br>• 100% Free Cancellation up to 24 hours before check-in<br>• Cancellations <24 hours prior incur a 1-night charge<br>• Refunds are processed within 3–7 business days.";
   }
 
   return {
@@ -282,10 +290,10 @@ function localSmartFallback(text: string): LLMChatApiResponse {
         }
       : null,
     quickReplies: [
-      "Hotel rekomendasi di Bali",
-      "Hitung biaya 3 malam di Maldives",
-      "Hotel di bawah Rp 2.500.000",
-      "Cek status reservasi saya",
+      "Recommended hotels in Bali",
+      "Calculate 3 nights in Maldives",
+      "Hotels under Rp 2,500,000",
+      "Check my reservation status",
     ],
     metadata: {
       provider: "smart_fallback",

@@ -10,31 +10,31 @@ def get_dynamic_quick_replies(intent: str, matched_hotels: List[Dict[str, Any]])
     if intent == "hotel_recommendation" and matched_hotels:
         h = matched_hotels[0]
         return [
-            f"Hitung biaya 3 malam di {h['name']}",
-            "Hotel dengan harga di bawah Rp 2.500.000",
-            "Apa saja promo yang sedang aktif?",
-            "Cek status reservasi saya",
+            f"Calculate 3 nights at {h['name']}",
+            "Hotels under Rp 2,500,000",
+            "What promotions are active?",
+            "Check my reservation status",
         ]
     if intent == "price_calculation":
         return [
-            "Metode pembayaran apa saja?",
-            "Kebijakan pembatalan & refund",
-            "Bandingkan hotel di Bali",
-            "Cek status reservasi saya",
+            "What payment methods are accepted?",
+            "Cancellation & refund policy",
+            "Compare hotels in Bali",
+            "Check my reservation status",
         ]
     if intent == "booking_check":
         return [
-            "Hotel rekomendasi di Bali",
-            "Simulasi 3 malam di Maldives",
-            "Kebijakan pembatalan",
-            "Promo Gold Member",
+            "Recommended hotels in Bali",
+            "3-night quote in Maldives",
+            "Cancellation policy",
+            "Gold Member perks",
         ]
     return [
-        "Hotel rekomendasi di Bali",
-        "Hitung biaya 3 malam di Maldives",
-        "Hotel di bawah Rp 2.500.000",
-        "Cek status reservasi saya",
-        "Metode pembayaran & promo",
+        "Recommended hotels in Bali",
+        "Calculate 3 nights in Maldives",
+        "Hotels under Rp 2,500,000",
+        "Check my reservation status",
+        "Payment methods & promos",
     ]
 
 

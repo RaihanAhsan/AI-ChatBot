@@ -24,16 +24,16 @@ export const FALLBACK_HOTELS: Hotel[] = [
       IMG("photo-1611892440504-42a792e24d32", 900),
     ],
     description:
-      "Berada di tepi pantai Nusa Dua yang berpasir putih, The Grand Azure menghadirkan 88 suite dan vila pribadi dengan kolam renang infinity menghadap Samudra Hindia. Nikmati spa tradisional Bali, restoran fine dining, dan layanan butler 24 jam yang siap memenuhi setiap kebutuhan Anda.",
+      "Set along the pristine white-sand beaches of Nusa Dua, The Grand Azure features 88 private suites and villas with infinity pools overlooking the Indian Ocean. Enjoy authentic Balinese spa rituals, world-class fine dining, and 24-hour personal butler service tailored to your every wish.",
     amenities: [
-      "Kolam Infinity",
+      "Infinity Pool",
       "Spa & Wellness",
-      "Pantai Privat",
+      "Private Beach",
       "Fine Dining",
-      "Butler 24/7",
-      "Wi-Fi Cepat",
-      "Pusat Kebugaran",
-      "Antar-Jemput Bandara",
+      "24/7 Butler",
+      "High-Speed Wi-Fi",
+      "Fitness Center",
+      "Airport Transfer",
     ],
     rooms: [
       {
@@ -44,7 +44,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 2,
         image: IMG("photo-1611892440504-42a792e24d32", 800),
-        perks: ["Sarapan", "Ocean View"],
+        perks: ["Breakfast", "Ocean View"],
       },
       {
         id: "r2",
@@ -54,17 +54,17 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 3,
         image: IMG("photo-1590490360182-c33d57733427", 800),
-        perks: ["Sarapan", "Lounge Access", "Bathtub"],
+        perks: ["Breakfast", "Lounge Access", "Bathtub"],
       },
       {
         id: "r3",
         name: "Private Pool Villa",
         price: 6800000,
         size: "140 m²",
-        bed: "2 King Bed",
+        bed: "2 King Beds",
         max: 4,
         image: IMG("photo-1631049307264-da0ec9d70304", 800),
-        perks: ["Sarapan", "Private Pool", "Butler"],
+        perks: ["Breakfast", "Private Pool", "Butler"],
       },
     ],
   },
@@ -85,16 +85,16 @@ export const FALLBACK_HOTELS: Hotel[] = [
       IMG("photo-1590490360182-c33d57733427", 900),
     ],
     description:
-      "Menara ikonik di jantung Sudirman dengan panorama skyline Jakarta dari lantai 42. Aurora Sky Palace menawarkan kamar dengan jendela floor-to-ceiling, rooftop bar, dan akses langsung ke pusat bisnis SCBD.",
+      "An iconic architectural tower in the heart of Sudirman offering sweeping Jakarta skyline panoramas from the 42nd floor. Aurora Sky Palace delivers floor-to-ceiling windows, an acclaimed rooftop bar, and direct access to the SCBD financial district.",
     amenities: [
       "Rooftop Bar",
-      "Kolam Indoor",
+      "Indoor Pool",
       "Business Center",
-      "Spa",
-      "Restoran",
-      "Wi-Fi Cepat",
-      "Parkir Valet",
-      "Meeting Room",
+      "Luxury Spa",
+      "Signature Restaurant",
+      "High-Speed Wi-Fi",
+      "Valet Parking",
+      "Boardrooms",
     ],
     rooms: [
       {
@@ -105,7 +105,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "Queen Bed",
         max: 2,
         image: IMG("photo-1590490360182-c33d57733427", 800),
-        perks: ["Sarapan", "City View"],
+        perks: ["Breakfast", "City View"],
       },
       {
         id: "r2",
@@ -115,7 +115,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 3,
         image: IMG("photo-1611892440504-42a792e24d32", 800),
-        perks: ["Sarapan", "Lounge Access", "Work Desk"],
+        perks: ["Breakfast", "Lounge Access", "Work Desk"],
       },
     ],
   },
@@ -136,16 +136,16 @@ export const FALLBACK_HOTELS: Hotel[] = [
       IMG("photo-1445019980597-93fa8acb246c", 900),
     ],
     description:
-      "Tersembunyi di antara sawah terasering Tegallalang, Villa Serenity adalah retret ketenangan dengan 24 vila pribadi. Setiap vila memiliki kolam renang pribadi menghadap lembah hijau dan balkon untuk menikmati matahari terbit.",
+      "Tucked away amidst the emerald rice terraces of Tegallalang, Villa Serenity is a tranquil sanctuary of 24 private villas. Each villa boasts a heated plunge pool overlooking lush jungle valleys and sunrise decks.",
     amenities: [
       "Private Pool",
       "Yoga Pavilion",
       "Organic Restaurant",
-      "Spa",
+      "Holistic Spa",
       "Trekking Guide",
-      "Wi-Fi",
-      "Parkir",
-      "Antar-Jemput",
+      "High-Speed Wi-Fi",
+      "Private Parking",
+      "Shuttle Service",
     ],
     rooms: [
       {
@@ -156,7 +156,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 2,
         image: IMG("photo-1631049307264-da0ec9d70304", 800),
-        perks: ["Sarapan", "Garden View"],
+        perks: ["Breakfast", "Garden View"],
       },
       {
         id: "r2",
@@ -166,7 +166,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 3,
         image: IMG("photo-1571896349842-33c89424de2d", 800),
-        perks: ["Sarapan", "Private Pool", "Valley View"],
+        perks: ["Breakfast", "Private Pool", "Valley View"],
       },
     ],
   },
@@ -187,15 +187,15 @@ export const FALLBACK_HOTELS: Hotel[] = [
       IMG("photo-1590490360182-c33d57733427", 900),
     ],
     description:
-      "Ikon Marina Bay dengan arsitektur marmer dan kaca. The Marble Crown menawarkan pemandangan teluk spektakuler, infinity pool di lantai 57, serta koleksi seni kontemporer di seluruh area hotel.",
+      "A Marina Bay landmark crafted from Italian marble and glass. The Marble Crown offers breathtaking bay views, a 57th-floor sky infinity pool, and a curated museum-grade contemporary art collection.",
     amenities: [
       "Infinity Pool",
       "Sky Bar",
       "Michelin Dining",
-      "Spa",
-      "Gym 24 Jam",
-      "Wi-Fi",
-      "Concierge",
+      "Luxury Spa",
+      "24-Hour Gym",
+      "High-Speed Wi-Fi",
+      "24/7 Concierge",
       "Business Center",
     ],
     rooms: [
@@ -207,7 +207,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 2,
         image: IMG("photo-1590490360182-c33d57733427", 800),
-        perks: ["Sarapan", "Bay View"],
+        perks: ["Breakfast", "Bay View"],
       },
       {
         id: "r2",
@@ -217,7 +217,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 3,
         image: IMG("photo-1611892440504-42a792e24d32", 800),
-        perks: ["Sarapan", "Skyline View", "Club Access"],
+        perks: ["Breakfast", "Skyline View", "Club Access"],
       },
     ],
   },
@@ -238,15 +238,15 @@ export const FALLBACK_HOTELS: Hotel[] = [
       IMG("photo-1566073771259-6a8506099945", 900),
     ],
     description:
-      "Resor overwater paling ikonik di Maladewa. 42 vila di atas laguna kristal dengan kaca lantai, dek pribadi, dan akses langsung ke terumbu karang. Termasuk seaplane transfer dan private chef.",
+      "The Maldives' most iconic overwater sanctuary. 42 villas suspended above a crystal lagoon featuring glass floor panels, private sundecks, and direct coral reef access. Includes private seaplane transfers and a personal chef.",
     amenities: [
       "Overwater Villa",
       "Private Chef",
       "House Reef",
       "Seaplane Transfer",
-      "Spa Overwater",
+      "Overwater Spa",
       "Diving Center",
-      "Wi-Fi",
+      "High-Speed Wi-Fi",
       "All-Inclusive",
     ],
     rooms: [
@@ -289,15 +289,15 @@ export const FALLBACK_HOTELS: Hotel[] = [
       IMG("photo-1520250497591-112f2f40a3f4", 900),
     ],
     description:
-      "Menghadap Burj Khalifa, Obsidian Heights adalah mahakarya arsitektur modern Dubai. Nikmati rooftop infinity pool, lounge eksklusif, dan koleksi restoran dari chef bintang Michelin.",
+      "Directly facing the Burj Khalifa, Obsidian Heights is a masterpiece of modern Dubai luxury. Experience our sky-high rooftop infinity pool, private members' lounge, and Michelin-starred culinary destinations.",
     amenities: [
       "Rooftop Pool",
       "Burj View",
       "Michelin Dining",
-      "Spa",
+      "Royal Spa",
       "Luxury Shopping",
-      "Wi-Fi",
-      "Valet",
+      "High-Speed Wi-Fi",
+      "Valet Service",
       "Kids Club",
     ],
     rooms: [
@@ -309,7 +309,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 2,
         image: IMG("photo-1611892440504-42a792e24d32", 800),
-        perks: ["Sarapan", "Burj View"],
+        perks: ["Breakfast", "Burj View"],
       },
       {
         id: "r2",
@@ -319,7 +319,7 @@ export const FALLBACK_HOTELS: Hotel[] = [
         bed: "King Bed",
         max: 4,
         image: IMG("photo-1590490360182-c33d57733427", 800),
-        perks: ["Sarapan", "Lounge Access", "Butler", "Panoramic"],
+        perks: ["Breakfast", "Lounge Access", "Butler", "Panoramic"],
       },
     ],
   },
@@ -342,7 +342,7 @@ export const nightsBetween = (a?: string, b?: string) => {
 
 export const fmtDate = (iso?: string) =>
   iso
-    ? new Date(iso).toLocaleDateString("id-ID", {
+    ? new Date(iso).toLocaleDateString("en-US", {
         day: "numeric",
         month: "short",
         year: "numeric",
@@ -399,7 +399,7 @@ export async function apiLogin(
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(
-      err.detail || "Email atau password salah. Silakan periksa kembali."
+      err.detail || "Invalid email or password. Please try again."
     );
   }
   return await res.json();
@@ -420,7 +420,7 @@ export async function apiRegister(payload: {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Gagal mendaftarkan akun.");
+    throw new Error(err.detail || "Failed to register account.");
   }
   return await res.json();
 }

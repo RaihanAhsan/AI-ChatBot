@@ -14,10 +14,10 @@ def login(payload: LoginRequest):
 
     if not email or not re.match(r"^\S+@\S+\.\S+$", email):
         raise HTTPException(
-            status_code=400, detail="Silakan masukkan alamat email yang valid."
+            status_code=400, detail="Please enter a valid email address."
         )
     if not password:
-        raise HTTPException(status_code=400, detail="Password wajib diisi.")
+        raise HTTPException(status_code=400, detail="Password is required.")
 
     conn = get_connection()
     cur = conn.cursor()
@@ -28,13 +28,13 @@ def login(payload: LoginRequest):
     if not user:
         raise HTTPException(
             status_code=401,
-            detail="Akun belum terdaftar. Silakan daftar akun terlebih dahulu.",
+            detail="Account not found. Please register an account first.",
         )
 
     if user["password"] != password:
         raise HTTPException(
             status_code=401,
-            detail="Email atau password salah. Silakan periksa kembali.",
+            detail="Invalid email or password. Please try again.",
         )
 
     role = user["role"] if "role" in user.keys() and user["role"] else "user"
@@ -58,14 +58,14 @@ def register(payload: RegisterRequest):
     password = payload.password.strip()
 
     if not name or len(name) < 2:
-        raise HTTPException(status_code=400, detail="Nama lengkap wajib diisi.")
+        raise HTTPException(status_code=400, detail="Full name is required.")
     if not email or not re.match(r"^\S+@\S+\.\S+$", email):
         raise HTTPException(
-            status_code=400, detail="Silakan masukkan alamat email yang valid."
+            status_code=400, detail="Please enter a valid email address."
         )
     if not password or len(password) < 4:
         raise HTTPException(
-            status_code=400, detail="Password minimal 4 karakter."
+            status_code=400, detail="Password must be at least 4 characters."
         )
 
     conn = get_connection()
@@ -75,7 +75,7 @@ def register(payload: RegisterRequest):
         conn.close()
         raise HTTPException(
             status_code=400,
-            detail="Email sudah terdaftar. Silakan langsung masuk ke akun Anda.",
+            detail="Email is already registered. Please sign in to your account.",
         )
 
     year_now = str(datetime.now().year)

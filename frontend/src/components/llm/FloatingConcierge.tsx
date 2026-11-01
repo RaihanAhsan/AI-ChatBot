@@ -129,7 +129,7 @@ export default function FloatingConcierge({
                       <div className="rounded-2xl border border-gold-400/35 bg-gold-400/[.07] p-3 text-[11px]">
                         <div className="flex items-center justify-between text-gold-300 font-semibold">
                           <span>
-                            ✦ Estimasi Biaya ({m.priceQuote.nights} Malam)
+                            ✦ Estimated Quote ({m.priceQuote.nights} Nights)
                           </span>
                           <span>{fmtRp(m.priceQuote.total)}</span>
                         </div>
@@ -144,7 +144,7 @@ export default function FloatingConcierge({
                           }}
                           className="mt-2.5 w-full rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 py-2 text-[11px] font-semibold text-ink-900 transition hover:opacity-95"
                         >
-                          Lanjut ke Pemesanan →
+                          Proceed to Booking →
                         </button>
                       </div>
                     )}
@@ -184,7 +184,7 @@ export default function FloatingConcierge({
                                 <p className="mt-0.5 text-[11px] font-medium text-gold-300">
                                   {fmtRp(h.price)}{" "}
                                   <span className="text-[9px] text-white/35">
-                                    /malam
+                                    /night
                                   </span>
                                 </p>
                               </div>
@@ -198,7 +198,7 @@ export default function FloatingConcierge({
                                 }}
                                 className="flex-1 rounded-lg border border-white/15 py-1 text-[10px] text-white/70 transition hover:border-gold-400/50 hover:text-gold-300"
                               >
-                                Detail Hotel
+                                Hotel Details
                               </button>
                               <button
                                 type="button"
@@ -208,7 +208,7 @@ export default function FloatingConcierge({
                                 }}
                                 className="flex-1 rounded-lg bg-gradient-to-r from-gold-400 to-gold-600 py-1 text-[10px] font-semibold text-ink-900 transition hover:opacity-95"
                               >
-                                Lanjut Pemesanan →
+                                Book Now →
                               </button>
                             </div>
                           </div>
@@ -276,7 +276,7 @@ export default function FloatingConcierge({
                   handleSend();
                 }
               }}
-              placeholder="Tanyakan rekomendasi hotel atau pemesanan…"
+              placeholder="Ask for hotel recommendations or price quotes…"
               className="max-h-24 flex-1 resize-none bg-transparent px-3 py-2 text-sm text-white placeholder-white/30 outline-none"
             />
             <button

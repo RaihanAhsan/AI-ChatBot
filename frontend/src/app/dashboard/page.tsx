@@ -45,14 +45,14 @@ interface ToastMsg {
 }
 
 const INITIAL_BOT_WELCOME =
-  'Selamat datang di <b class="text-gold-300">Aurelia Collection</b> ✦<br><br>Saya Aurelia Concierge, siap membantu Anda menemukan penginapan terbaik, menghitung rincian biaya kamar, atau memeriksa status reservasi Anda. Ada yang bisa saya bantu?';
+  'Welcome to <b class="text-gold-300">Aurelia Collection</b> ✦<br><br>I am your Aurelia Concierge, ready to help you discover extraordinary five-star properties, calculate room rates & taxes, or check your reservation status. How may I assist you today?';
 
 const DEFAULT_QUICK_REPLIES = [
-  "Hotel rekomendasi di Bali",
-  "Hitung biaya 3 malam di Maldives",
-  "Cara pesan kamar?",
-  "Metode pembayaran",
-  "Kebijakan pembatalan",
+  "Recommended hotels in Bali",
+  "Calculate 3 nights in Maldives",
+  "How to book a room?",
+  "Payment methods",
+  "Cancellation policy",
 ];
 
 export default function DashboardPage() {
@@ -240,7 +240,7 @@ export default function DashboardPage() {
     setWishlist((prev) => {
       const exists = prev.includes(hotelId);
       showToast(
-        exists ? "Dihapus dari wishlist" : "Ditambahkan ke wishlist",
+        exists ? "Removed from wishlist" : "Added to wishlist",
         "info"
       );
       return exists ? prev.filter((x) => x !== hotelId) : [...prev, hotelId];
@@ -254,7 +254,7 @@ export default function DashboardPage() {
         .getElementById("hotelsSection")
         ?.scrollIntoView({ behavior: "smooth" });
     }, 100);
-    showToast("Menampilkan hasil pencarian", "info");
+    showToast("Showing search results", "info");
   };
 
   // Start Booking from Detail
@@ -262,7 +262,7 @@ export default function DashboardPage() {
     const h = selectedHotel || hotels[0];
     const r = roomOverride || selectedRoom || h?.rooms?.[0];
     if (!h || !r) {
-      return showToast("Pilih kamar terlebih dahulu", "error");
+      return showToast("Please select a room first", "error");
     }
     const ci = detailCheckIn || todayISO(1);
     let co = detailCheckOut || todayISO(3);
@@ -325,7 +325,7 @@ export default function DashboardPage() {
     }
     goPage("booking");
     showToast(
-      `Simulasi ${quote.nights} malam di ${h.name} siap dipesan!`,
+      `Ready to book ${quote.nights} night(s) at ${h.name}!`,
       "info"
     );
   };
@@ -334,20 +334,20 @@ export default function DashboardPage() {
     e.preventDefault();
     setBookingErr("");
     if (!guestName.trim()) {
-      setBookingErr("Nama lengkap wajib diisi.");
-      return showToast("Nama lengkap wajib diisi.", "error");
+      setBookingErr("Full name is required.");
+      return showToast("Full name is required.", "error");
     }
     if (!/^\S+@\S+\.\S+$/.test(guestEmail.trim())) {
-      setBookingErr("Format email tidak valid.");
-      return showToast("Format email tidak valid.", "error");
+      setBookingErr("Invalid email address format.");
+      return showToast("Invalid email address format.", "error");
     }
     if (guestPhone.trim().length < 8) {
-      setBookingErr("Nomor telepon tidak valid.");
-      return showToast("Nomor telepon tidak valid.", "error");
+      setBookingErr("Invalid phone number.");
+      return showToast("Invalid phone number.", "error");
     }
     if (!agreeTerms) {
-      setBookingErr("Anda harus menyetujui syarat & ketentuan.");
-      return showToast("Anda harus menyetujui syarat & ketentuan.", "error");
+      setBookingErr("You must agree to the terms & conditions.");
+      return showToast("You must agree to the terms & conditions.", "error");
     }
     if (!draft) return;
 
@@ -378,10 +378,10 @@ export default function DashboardPage() {
     }
   };
 
-  const processPayment = async (methodLabel = "Kartu Kredit") => {
+  const processPayment = async (methodLabel = "Credit Card") => {
     if (!draft) return;
-    setProcessingText("Memproses pembayaran…");
-    setTimeout(() => setProcessingText("Mengonfirmasi reservasi…"), 1000);
+    setProcessingText("Processing payment…");
+    setTimeout(() => setProcessingText("Confirming your reservation…"), 1000);
 
     setTimeout(async () => {
       const created = await apiCreateBooking({
@@ -406,7 +406,7 @@ export default function DashboardPage() {
       setProcessingText(null);
       goPage("success");
       fireConfetti();
-      showToast("Pembayaran berhasil! Reservasi dikonfirmasi.", "success");
+      showToast("Payment successful! Reservation confirmed.", "success");
     }, 2100);
   };
 
@@ -415,22 +415,22 @@ export default function DashboardPage() {
     setPaymentErr("");
     const num = cardNumber.replace(/\s/g, "");
     if (num.length !== 16) {
-      setPaymentErr("Nomor kartu harus 16 digit.");
-      return showToast("Nomor kartu harus 16 digit.", "error");
+      setPaymentErr("Card number must be 16 digits.");
+      return showToast("Card number must be 16 digits.", "error");
     }
     if (!cardName.trim()) {
-      setPaymentErr("Nama pemegang kartu wajib diisi.");
-      return showToast("Nama pemegang kartu wajib diisi.", "error");
+      setPaymentErr("Cardholder name is required.");
+      return showToast("Cardholder name is required.", "error");
     }
     if (!/^\d{2}\/\d{2}$/.test(cardExp)) {
-      setPaymentErr("Format masa berlaku MM/YY.");
-      return showToast("Format masa berlaku MM/YY.", "error");
+      setPaymentErr("Expiration date must be in MM/YY format.");
+      return showToast("Expiration date must be in MM/YY format.", "error");
     }
     if (cardCvv.length < 3) {
-      setPaymentErr("CVV tidak valid.");
-      return showToast("CVV tidak valid.", "error");
+      setPaymentErr("Invalid CVV.");
+      return showToast("Invalid CVV.", "error");
     }
-    processPayment("Kartu Kredit");
+    processPayment("Credit Card");
   };
 
   // Chatbot Handler
@@ -484,7 +484,7 @@ export default function DashboardPage() {
       },
     ]);
     setQuickReplies(DEFAULT_QUICK_REPLIES);
-    showToast("Percakapan baru dimulai.", "info");
+    showToast("Started a new conversation.", "info");
   };
 
   if (!authChecked || !user) {
@@ -495,7 +495,6 @@ export default function DashboardPage() {
     );
   }
 
-  const isAdmin = user.role === "admin";
   const userInitial = user.name.charAt(0).toUpperCase();
 
   const filteredHotels = activeCity
@@ -560,7 +559,7 @@ export default function DashboardPage() {
                 {processingText}
               </p>
               <p className="mt-1.5 text-[11px] tracking-wider text-white/30">
-                Mohon jangan tutup halaman ini
+                Please do not close this page
               </p>
             </div>
           </div>
@@ -579,7 +578,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-[10px] tracking-[.3em] text-gold-400">
-                DETAIL RESERVASI
+                RESERVATION DETAILS
               </span>
               <button
                 onClick={() => setDetailModalBooking(null)}
@@ -600,7 +599,7 @@ export default function DashboardPage() {
             <div className="my-4 h-px bg-white/10"></div>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-white/40">Kamar</span>
+                <span className="text-white/40">Room</span>
                 <span className="text-white/85">
                   {detailModalBooking.roomName}
                 </span>
@@ -618,33 +617,33 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/40">Durasi & Tamu</span>
+                <span className="text-white/40">Duration & Guests</span>
                 <span className="text-white/85">
-                  {detailModalBooking.nights} malam •{" "}
-                  {detailModalBooking.guests} dewasa
+                  {detailModalBooking.nights} night(s) •{" "}
+                  {detailModalBooking.guests} adult(s)
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/40">Nama Tamu</span>
+                <span className="text-white/40">Guest Name</span>
                 <span className="text-white/85">
                   {detailModalBooking.guestName}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/40">Telepon</span>
+                <span className="text-white/40">Phone</span>
                 <span className="text-white/85">
                   {detailModalBooking.guestPhone}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/40">Permintaan</span>
+                <span className="text-white/40">Special Requests</span>
                 <span className="text-white/85">
                   {detailModalBooking.requests || "—"}
                 </span>
               </div>
               <div className="my-2 h-px bg-white/10"></div>
               <div className="flex justify-between font-semibold">
-                <span className="text-white/60">Total Dibayar</span>
+                <span className="text-white/60">Total Paid</span>
                 <span className="text-gold-300">
                   {fmtRp(detailModalBooking.total)}
                 </span>
@@ -654,7 +653,7 @@ export default function DashboardPage() {
               onClick={() => setDetailModalBooking(null)}
               className="btn-gold mt-5 w-full py-2.5 text-xs"
             >
-              Tutup
+              Close
             </button>
           </div>
         </div>
@@ -697,7 +696,7 @@ export default function DashboardPage() {
                 currentPage === "home" ? "text-gold-300" : ""
               }`}
             >
-              Beranda
+              Home
             </button>
             <button
               onClick={() => {
@@ -712,7 +711,7 @@ export default function DashboardPage() {
               }}
               className="transition hover:text-gold-300"
             >
-              Hotel
+              Hotels
             </button>
             <button
               onClick={() => goPage("profile")}
@@ -720,7 +719,7 @@ export default function DashboardPage() {
                 currentPage === "profile" ? "text-gold-300" : ""
               }`}
             >
-              Reservasi Saya
+              My Reservations
             </button>
             <button
               onClick={() => goPage("concierge")}
@@ -728,7 +727,7 @@ export default function DashboardPage() {
                 currentPage === "concierge" ? "text-gold-300" : ""
               }`}
             >
-              Tanya Concierge
+              Ask Concierge
             </button>
           </nav>
 
@@ -766,20 +765,20 @@ export default function DashboardPage() {
                     onClick={() => goPage("profile")}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs text-white/70 transition hover:bg-white/5 hover:text-gold-300"
                   >
-                    Profil & Reservasi
+                    Profile & Reservations
                   </button>
                   <button
                     onClick={() => goPage("concierge")}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs text-gold-300 transition hover:bg-white/5"
                   >
-                    ✦ Tanya Concierge
+                    ✦ Ask Concierge
                   </button>
                   <div className="my-1 h-px bg-white/10"></div>
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs text-red-300/80 transition hover:bg-red-500/10 hover:text-red-300"
                   >
-                    Keluar
+                    Sign Out
                   </button>
                 </div>
               )}
@@ -807,26 +806,27 @@ export default function DashboardPage() {
                 COLLECTION
               </p>
               <h1 className="max-w-3xl font-serif text-5xl leading-[1.08] text-white sm:text-6xl lg:text-7xl animate-fade-up">
-                Temukan penginapan
+                Discover your
                 <br />
-                <span className="gold-shimmer">luar biasa</span> Anda
+                <span className="gold-shimmer">extraordinary</span> stay
               </h1>
               <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/55 animate-fade-up">
-                Lebih dari 120 properti bintang lima di destinasi terbaik dunia.
-                Pesan dalam hitungan detik, nikmati layanan tanpa kompromi.
+                Over 120 five-star properties across the world&apos;s finest
+                destinations. Reserve in seconds, experience uncompromising
+                hospitality.
               </p>
 
               {/* SEARCH BAR */}
               <div className="mt-12 w-full max-w-4xl animate-fade-up">
                 <div className="card-glass grid grid-cols-1 gap-1 p-2 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_auto]">
                   <div className="rounded-2xl px-5 py-3.5 transition hover:bg-white/5">
-                    <label className="label-xs">Destinasi</label>
+                    <label className="label-xs">Destination</label>
                     <select
                       value={searchCity}
                       onChange={(e) => setSearchCity(e.target.value)}
                       className="w-full bg-transparent text-sm font-medium text-white outline-none [&>option]:bg-ink-800"
                     >
-                      <option value="">Semua destinasi</option>
+                      <option value="">All destinations</option>
                       <option value="Bali">Bali</option>
                       <option value="Jakarta">Jakarta</option>
                       <option value="Ubud">Ubud</option>
@@ -867,7 +867,7 @@ export default function DashboardPage() {
                     onClick={handleSearch}
                     className="btn-gold m-1 rounded-2xl px-7"
                   >
-                    Cari
+                    Search
                   </button>
                 </div>
               </div>
@@ -882,13 +882,14 @@ export default function DashboardPage() {
             <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
               <div>
                 <p className="mb-3 text-[11px] tracking-[.4em] text-gold-400">
-                  KURASI PILIHAN
+                  CURATED SELECTION
                 </p>
                 <h2 className="font-serif text-4xl text-white sm:text-5xl">
-                  Hotel <span className="gold-shimmer">Terbaik</span>
+                  Finest <span className="gold-shimmer">Hotels</span>
                 </h2>
                 <p className="mt-3 text-sm text-white/40">
-                  Dipilih oleh tim kurator kami dari ribuan properti.
+                  Handpicked by our curatorial team from thousands of luxury
+                  properties.
                 </p>
               </div>
 
@@ -913,7 +914,7 @@ export default function DashboardPage() {
                           : "border-white/10 text-white/50 hover:border-gold-400/40 hover:text-gold-300"
                       }`}
                     >
-                      {city || "Semua"}
+                      {city || "All"}
                     </button>
                   );
                 })}
@@ -923,10 +924,10 @@ export default function DashboardPage() {
             {filteredHotels.length === 0 ? (
               <div className="py-24 text-center">
                 <p className="font-serif text-2xl text-white/50">
-                  Tidak ada hotel ditemukan
+                  No hotels found
                 </p>
                 <p className="mt-2 text-sm text-white/30">
-                  Coba ubah filter destinasi Anda.
+                  Try changing your destination filter.
                 </p>
               </div>
             ) : (
@@ -1021,18 +1022,18 @@ export default function DashboardPage() {
                       <div className="mt-5 flex items-end justify-between border-t border-white/10 pt-4">
                         <div>
                           <p className="text-[10px] tracking-wider text-white/30">
-                            MULAI DARI
+                            STARTING FROM
                           </p>
                           <p className="font-serif text-xl text-gold-300">
                             {fmtRp(h.price)}
                             <span className="text-[10px] font-sans text-white/30">
                               {" "}
-                              /malam
+                              /night
                             </span>
                           </p>
                         </div>
                         <span className="flex items-center gap-1.5 rounded-xl border border-white/15 px-4 py-2 text-[11px] font-medium text-white/70 transition group-hover:border-gold-400/60 group-hover:text-gold-300">
-                          Lihat →
+                          Explore →
                         </span>
                       </div>
                     </div>
@@ -1047,30 +1048,30 @@ export default function DashboardPage() {
             <div className="mx-auto max-w-7xl px-5 lg:px-8">
               <div className="mb-16 text-center">
                 <p className="mb-3 text-[11px] tracking-[.4em] text-gold-400">
-                  MENGAPA AURELIA
+                  WHY AURELIA
                 </p>
                 <h2 className="font-serif text-4xl text-white sm:text-5xl">
-                  Standar <span className="gold-shimmer">Tanpa Tanding</span>
+                  Unrivaled <span className="gold-shimmer">Standards</span>
                 </h2>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {[
                   {
-                    title: "Harga Terjamin",
-                    desc: "Harga terbaik tanpa biaya tersembunyi. Jaminan refund 24 jam.",
+                    title: "Best Rate Guarantee",
+                    desc: "Best direct rates with zero hidden fees and a 24-hour refund guarantee.",
                   },
                   {
-                    title: "Check-in Instan",
-                    desc: "Langsung ke kamar tanpa antre. Konfirmasi dalam 60 detik.",
+                    title: "Instant Check-in",
+                    desc: "Head straight to your suite without waiting in line. Confirmed within 60 seconds.",
                   },
                   {
-                    title: "Butler 24/7",
-                    desc: "Asisten pribadi siap membantu kapan pun Anda membutuhkan.",
+                    title: "24/7 Private Butler",
+                    desc: "Dedicated personal concierge ready to assist you at any hour.",
                   },
                   {
-                    title: "Reward Eksklusif",
-                    desc: "Kumpulkan poin setiap menginap dan tukar dengan malam gratis.",
+                    title: "Exclusive Rewards",
+                    desc: "Earn points on every stay and redeem them for complimentary luxury nights.",
                   },
                 ].map((item) => (
                   <div
@@ -1111,7 +1112,7 @@ export default function DashboardPage() {
             onClick={() => goPage("home")}
             className="mb-7 inline-flex items-center gap-2 text-xs text-white/40 transition hover:text-gold-300"
           >
-            ← Kembali ke daftar hotel
+            ← Back to hotels
           </button>
 
           {/* Gallery */}
@@ -1132,7 +1133,7 @@ export default function DashboardPage() {
                 />
                 {idx === 3 && (
                   <div className="absolute inset-0 grid place-items-center bg-ink-900/60 text-xs tracking-widest text-white/80">
-                    +12 FOTO
+                    +12 PHOTOS
                   </div>
                 )}
               </div>
@@ -1164,10 +1165,10 @@ export default function DashboardPage() {
                   </span>
                   <div className="text-left">
                     <p className="text-xs font-semibold text-white">
-                      Sangat Baik
+                      Exceptional
                     </p>
                     <p className="text-[11px] text-white/35">
-                      {selectedHotel.reviews.toLocaleString("id-ID")} ulasan
+                      {selectedHotel.reviews.toLocaleString("en-US")} reviews
                     </p>
                   </div>
                 </div>
@@ -1175,12 +1176,12 @@ export default function DashboardPage() {
 
               <div className="my-8 h-px bg-white/10"></div>
 
-              <h3 className="mb-3 font-serif text-2xl">Tentang properti ini</h3>
+              <h3 className="mb-3 font-serif text-2xl">About this property</h3>
               <p className="text-sm leading-relaxed text-white/45">
                 {selectedHotel.description}
               </p>
 
-              <h3 className="mb-4 mt-10 font-serif text-2xl">Fasilitas</h3>
+              <h3 className="mb-4 mt-10 font-serif text-2xl">Amenities</h3>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {selectedHotel.amenities.map((a) => (
                   <div
@@ -1195,7 +1196,7 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              <h3 className="mb-4 mt-12 font-serif text-2xl">Pilih Kamar</h3>
+              <h3 className="mb-4 mt-12 font-serif text-2xl">Select a Room</h3>
               <div className="space-y-4">
                 {selectedHotel.rooms.map((r) => {
                   const isSel = selectedRoom?.id === r.id;
@@ -1236,7 +1237,7 @@ export default function DashboardPage() {
                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/40">
                               <span>📐 {r.size}</span>
                               <span>🛏 {r.bed}</span>
-                              <span>👤 Maks {r.max}</span>
+                              <span>👤 Max {r.max}</span>
                             </div>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               {r.perks.map((p) => (
@@ -1254,12 +1255,12 @@ export default function DashboardPage() {
                               {fmtRp(r.price)}
                               <span className="text-[10px] font-sans text-white/30">
                                 {" "}
-                                /malam
+                                /night
                               </span>
                             </p>
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-emerald-300/70">
-                                Tersedia
+                                Available
                               </span>
                               <button
                                 type="button"
@@ -1269,7 +1270,7 @@ export default function DashboardPage() {
                                 }}
                                 className="rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-3.5 py-1.5 text-[11px] font-semibold text-ink-900 transition hover:shadow-glow active:scale-95"
                               >
-                                Pesan Kamar Ini →
+                                Book This Room →
                               </button>
                             </div>
                           </div>
@@ -1285,13 +1286,13 @@ export default function DashboardPage() {
             <aside className="lg:sticky lg:top-24 lg:self-start">
               <div className="card-glass p-6">
                 <p className="text-[11px] tracking-[.25em] text-white/40">
-                  MULAI DARI
+                  STARTING FROM
                 </p>
                 <div className="mt-1 flex items-end gap-1.5">
                   <span className="font-serif text-3xl text-gold-300">
                     {fmtRp(selectedRoom?.price || selectedHotel.price)}
                   </span>
-                  <span className="pb-1 text-xs text-white/35">/ malam</span>
+                  <span className="pb-1 text-xs text-white/35">/ night</span>
                 </div>
 
                 <div className="my-6 h-px bg-white/10"></div>
@@ -1328,29 +1329,29 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="label-xs">Tamu</label>
+                    <label className="label-xs">Guests</label>
                     <select
                       value={detailGuests}
                       onChange={(e) => setDetailGuests(Number(e.target.value))}
                       className="input-field text-xs [&>option]:bg-ink-800"
                     >
-                      <option value={1}>1 Dewasa</option>
-                      <option value={2}>2 Dewasa</option>
-                      <option value={3}>3 Dewasa</option>
-                      <option value={4}>4 Dewasa</option>
+                      <option value={1}>1 Adult</option>
+                      <option value={2}>2 Adults</option>
+                      <option value={3}>3 Adults</option>
+                      <option value={4}>4 Adults</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="mt-5 space-y-2 rounded-2xl bg-white/[.04] p-4 text-xs">
                   <div className="flex justify-between text-white/45">
-                    <span>Durasi</span>
+                    <span>Duration</span>
                     <span className="text-white/80">
-                      {detailNights > 0 ? `${detailNights} malam` : "1 malam"}
+                      {detailNights > 0 ? `${detailNights} night(s)` : "1 night"}
                     </span>
                   </div>
                   <div className="flex justify-between text-white/45">
-                    <span>Kamar dipilih</span>
+                    <span>Selected room</span>
                     <span className="text-right text-white/80">
                       {selectedRoom
                         ? `${selectedRoom.name} · ${fmtRp(
@@ -1366,10 +1367,10 @@ export default function DashboardPage() {
                   onClick={() => startBooking()}
                   className="btn-gold mt-5 w-full py-3.5 text-sm"
                 >
-                  Lanjut ke Pemesanan
+                  Continue to Booking
                 </button>
                 <p className="mt-3 text-center text-[10px] text-white/25">
-                  Gratis pembatalan hingga 24 jam sebelum check-in
+                  Free cancellation up to 24 hours before check-in
                 </p>
               </div>
             </aside>
@@ -1385,29 +1386,29 @@ export default function DashboardPage() {
               <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-400 text-[11px] font-bold text-ink-900">
                 1
               </span>{" "}
-              Data Tamu
+              Guest Details
             </div>
             <div className="h-px w-10 bg-gold-400/40"></div>
             <div className="flex items-center gap-2 text-white/30">
               <span className="grid h-7 w-7 place-items-center rounded-full border border-white/15 text-[11px]">
                 2
               </span>{" "}
-              Pembayaran
+              Payment
             </div>
             <div className="h-px w-10 bg-white/10"></div>
             <div className="flex items-center gap-2 text-white/30">
               <span className="grid h-7 w-7 place-items-center rounded-full border border-white/15 text-[11px]">
                 3
               </span>{" "}
-              Selesai
+              Confirmed
             </div>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
             <div className="card-glass p-7">
-              <h2 className="font-serif text-2xl">Detail Tamu</h2>
+              <h2 className="font-serif text-2xl">Guest Information</h2>
               <p className="mt-1 text-xs text-white/35">
-                Pastikan data sesuai dengan identitas resmi.
+                Please ensure your details match your official ID or passport.
               </p>
 
               <form
@@ -1417,31 +1418,31 @@ export default function DashboardPage() {
               >
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="label-xs">Nama Lengkap *</label>
+                    <label className="label-xs">Full Name *</label>
                     <input
                       type="text"
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       className="input-field"
-                      placeholder="Nama sesuai KTP/Paspor"
+                      placeholder="Full name as on ID / Passport"
                       required
                     />
                   </div>
                   <div>
-                    <label className="label-xs">Email *</label>
+                    <label className="label-xs">Email Address *</label>
                     <input
                       type="email"
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
                       className="input-field"
-                      placeholder="nama@email.com"
+                      placeholder="name@email.com"
                       required
                     />
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="label-xs">No. Telepon *</label>
+                    <label className="label-xs">Phone Number *</label>
                     <input
                       type="tel"
                       value={guestPhone}
@@ -1452,7 +1453,7 @@ export default function DashboardPage() {
                     />
                   </div>
                   <div>
-                    <label className="label-xs">Kewarganegaraan</label>
+                    <label className="label-xs">Nationality</label>
                     <select
                       value={guestCountry}
                       onChange={(e) => setGuestCountry(e.target.value)}
@@ -1468,14 +1469,14 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <label className="label-xs">
-                    Permintaan Khusus (opsional)
+                    Special Requests (optional)
                   </label>
                   <textarea
                     rows={3}
                     value={guestRequests}
                     onChange={(e) => setGuestRequests(e.target.value)}
                     className="input-field resize-none"
-                    placeholder="Contoh: kamar lantai tinggi, late check-in, dekorasi ulang tahun..."
+                    placeholder="e.g., high floor room, late check-in, anniversary setup..."
                   />
                 </div>
 
@@ -1487,10 +1488,10 @@ export default function DashboardPage() {
                     className="mt-0.5 h-4 w-4 rounded accent-gold-400"
                   />
                   <span>
-                    Saya menyetujui{" "}
-                    <span className="text-gold-400">Syarat & Ketentuan</span>{" "}
-                    serta{" "}
-                    <span className="text-gold-400">Kebijakan Privasi</span>{" "}
+                    I agree to the{" "}
+                    <span className="text-gold-400">Terms & Conditions</span>{" "}
+                    and{" "}
+                    <span className="text-gold-400">Privacy Policy</span> of
                     Aurelia Collection.
                   </span>
                 </label>
@@ -1507,13 +1508,13 @@ export default function DashboardPage() {
                     onClick={() => goPage("detail")}
                     className="btn-ghost flex-1 py-3 text-sm"
                   >
-                    Kembali
+                    Back
                   </button>
                   <button
                     type="submit"
                     className="btn-gold flex-1 py-3 text-sm"
                   >
-                    Lanjut ke Pembayaran
+                    Proceed to Payment
                   </button>
                 </div>
               </form>
@@ -1535,7 +1536,7 @@ export default function DashboardPage() {
                   <div className="my-5 h-px bg-white/10"></div>
                   <div className="space-y-2.5 text-xs">
                     <div className="flex justify-between text-white/45">
-                      <span>Kamar</span>
+                      <span>Room</span>
                       <span className="text-white/80">{draft.roomName}</span>
                     </div>
                     <div className="flex justify-between text-white/45">
@@ -1551,9 +1552,9 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div className="flex justify-between text-white/45">
-                      <span>Durasi</span>
+                      <span>Duration</span>
                       <span className="text-white/80">
-                        {draft.nights} malam
+                        {draft.nights} night(s)
                       </span>
                     </div>
                     <div className="my-2 h-px bg-white/10"></div>
@@ -1566,7 +1567,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div className="flex justify-between text-white/45">
-                      <span>Pajak (11%)</span>
+                      <span>Tax (11%)</span>
                       <span className="text-white/80">
                         {fmtRp(draftTotals.tax)}
                       </span>
@@ -1600,35 +1601,35 @@ export default function DashboardPage() {
               <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-400/20 text-[11px] text-gold-300">
                 ✓
               </span>{" "}
-              Data Tamu
+              Guest Details
             </div>
             <div className="h-px w-10 bg-gold-400/40"></div>
             <div className="flex items-center gap-2 text-gold-300">
               <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-400 text-[11px] font-bold text-ink-900">
                 2
               </span>{" "}
-              Pembayaran
+              Payment
             </div>
             <div className="h-px w-10 bg-white/10"></div>
             <div className="flex items-center gap-2 text-white/30">
               <span className="grid h-7 w-7 place-items-center rounded-full border border-white/15 text-[11px]">
                 3
               </span>{" "}
-              Selesai
+              Confirmed
             </div>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
             <div className="card-glass p-7">
-              <h2 className="font-serif text-2xl">Metode Pembayaran</h2>
+              <h2 className="font-serif text-2xl">Payment Method</h2>
               <p className="mt-1 text-xs text-white/35">
-                Transaksi dienkripsi dengan standar perbankan.
+                All transactions are protected with bank-grade encryption.
               </p>
 
               <div className="mt-6 grid grid-cols-3 gap-2">
                 {(
                   [
-                    ["card", "Kartu Kredit"],
+                    ["card", "Credit Card"],
                     ["va", "Virtual Account"],
                     ["ewallet", "E-Wallet"],
                   ] as const
@@ -1666,7 +1667,7 @@ export default function DashboardPage() {
                           CARD HOLDER
                         </p>
                         <p className="mt-1 text-xs uppercase tracking-wider text-white/80">
-                          {cardName || "NAMA PEMEGANG"}
+                          {cardName || "CARDHOLDER NAME"}
                         </p>
                       </div>
                       <div className="text-right">
@@ -1686,7 +1687,7 @@ export default function DashboardPage() {
                     noValidate
                   >
                     <div>
-                      <label className="label-xs">Nomor Kartu *</label>
+                      <label className="label-xs">Card Number *</label>
                       <input
                         type="text"
                         maxLength={19}
@@ -1702,7 +1703,7 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="label-xs">Nama pada Kartu *</label>
+                      <label className="label-xs">Name on Card *</label>
                       <input
                         type="text"
                         value={cardName}
@@ -1710,12 +1711,12 @@ export default function DashboardPage() {
                           setCardName(e.target.value.toUpperCase())
                         }
                         className="input-field uppercase"
-                        placeholder="NAMA LENGKAP"
+                        placeholder="FULL NAME"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="label-xs">Masa Berlaku *</label>
+                        <label className="label-xs">Expiration Date *</label>
                         <input
                           type="text"
                           maxLength={5}
@@ -1761,13 +1762,13 @@ export default function DashboardPage() {
                         onClick={() => goPage("booking")}
                         className="btn-ghost flex-1 py-3 text-sm"
                       >
-                        Kembali
+                        Back
                       </button>
                       <button
                         type="submit"
                         className="btn-gold flex-1 py-3 text-sm"
                       >
-                        🔒 Bayar Sekarang
+                        🔒 Pay Now
                       </button>
                     </div>
                   </form>
@@ -1790,7 +1791,7 @@ export default function DashboardPage() {
                           Virtual Account {bank}
                         </span>
                       </span>
-                      <span className="text-xs text-gold-300">Pilih →</span>
+                      <span className="text-xs text-gold-300">Select →</span>
                     </button>
                   ))}
                 </div>
@@ -1818,7 +1819,7 @@ export default function DashboardPage() {
 
             <aside className="lg:sticky lg:top-24 lg:self-start">
               <div className="card-glass p-6">
-                <h3 className="font-serif text-xl">Ringkasan Pesanan</h3>
+                <h3 className="font-serif text-xl">Order Summary</h3>
                 <div className="my-5 h-px bg-white/10"></div>
                 <div className="space-y-2.5 text-xs">
                   <div className="flex justify-between text-white/45">
@@ -1826,12 +1827,14 @@ export default function DashboardPage() {
                     <span className="text-white/80">{draft.hotelName}</span>
                   </div>
                   <div className="flex justify-between text-white/45">
-                    <span>Kamar</span>
+                    <span>Room</span>
                     <span className="text-white/80">{draft.roomName}</span>
                   </div>
                   <div className="flex justify-between text-white/45">
-                    <span>Durasi</span>
-                    <span className="text-white/80">{draft.nights} malam</span>
+                    <span>Duration</span>
+                    <span className="text-white/80">
+                      {draft.nights} night(s)
+                    </span>
                   </div>
                   <div className="my-2 h-px bg-white/10"></div>
                   <div className="flex justify-between text-white/45">
@@ -1841,7 +1844,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <div className="flex justify-between text-white/45">
-                    <span>Pajak & Service</span>
+                    <span>Tax & Service</span>
                     <span className="text-white/80">
                       {fmtRp(draftTotals.tax + draftTotals.service)}
                     </span>
@@ -1849,7 +1852,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="my-5 h-px bg-white/10"></div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-white/45">Total Bayar</span>
+                  <span className="text-xs text-white/45">Total Due</span>
                   <span className="font-serif text-2xl text-gold-300">
                     {fmtRp(draftTotals.total)}
                   </span>
@@ -1871,24 +1874,24 @@ export default function DashboardPage() {
           </div>
 
           <p className="text-[11px] tracking-[.4em] text-gold-400">
-            RESERVASI TERKONFIRMASI
+            RESERVATION CONFIRMED
           </p>
           <h1 className="mt-4 font-serif text-4xl text-white sm:text-5xl">
-            Terima kasih,{" "}
+            Thank you,{" "}
             <span className="gold-shimmer">
               {lastBooking.guestName.split(" ")[0]}
             </span>
             !
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/45">
-            Email konfirmasi telah dikirim. Tunjukkan kode booking di bawah saat
-            check-in.
+            A confirmation email has been sent. Please present your booking code
+            below upon check-in.
           </p>
 
           <div className="mt-10 w-full max-w-md">
             <div className="card-glass p-7">
               <p className="text-[10px] tracking-[.3em] text-white/35">
-                KODE BOOKING
+                BOOKING CODE
               </p>
               <p className="mt-2 font-mono text-3xl tracking-[.25em] text-gold-300">
                 {lastBooking.code}
@@ -1900,11 +1903,11 @@ export default function DashboardPage() {
                   <span className="text-white/85">{lastBooking.hotelName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/40">Kamar</span>
+                  <span className="text-white/40">Room</span>
                   <span className="text-white/85">{lastBooking.roomName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/40">Tanggal</span>
+                  <span className="text-white/40">Dates</span>
                   <span className="text-white/85">
                     {fmtDate(lastBooking.checkIn)} →{" "}
                     {fmtDate(lastBooking.checkOut)}
@@ -1912,7 +1915,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="my-2 h-px bg-white/10"></div>
                 <div className="flex justify-between font-semibold">
-                  <span className="text-white/60">Total Dibayar</span>
+                  <span className="text-white/60">Total Paid</span>
                   <span className="text-gold-300">
                     {fmtRp(lastBooking.total)}
                   </span>
@@ -1926,13 +1929,13 @@ export default function DashboardPage() {
               onClick={() => goPage("profile")}
               className="btn-gold flex-1 py-3 text-sm"
             >
-              Lihat Reservasi Saya
+              View My Reservations
             </button>
             <button
               onClick={() => goPage("home")}
               className="btn-ghost flex-1 py-3 text-sm"
             >
-              Kembali ke Beranda
+              Back to Home
             </button>
           </div>
         </section>
@@ -1963,51 +1966,51 @@ export default function DashboardPage() {
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
             <div className="card-glass p-5">
               <p className="text-[10px] tracking-[.2em] text-white/35">
-                TOTAL MENGINAP
+                TOTAL STAYS
               </p>
               <p className="mt-2 font-serif text-3xl text-white">
                 {totalNights}
               </p>
-              <p className="mt-1 text-[11px] text-white/30">malam</p>
+              <p className="mt-1 text-[11px] text-white/30">nights</p>
             </div>
             <div className="card-glass p-5">
               <p className="text-[10px] tracking-[.2em] text-white/35">
-                RESERVASI
+                RESERVATIONS
               </p>
               <p className="mt-2 font-serif text-3xl text-white">
                 {bookings.length}
               </p>
-              <p className="mt-1 text-[11px] text-white/30">total pesanan</p>
+              <p className="mt-1 text-[11px] text-white/30">total bookings</p>
             </div>
             <div className="card-glass p-5">
               <p className="text-[10px] tracking-[.2em] text-white/35">
-                POIN REWARD
+                REWARD POINTS
               </p>
               <p className="mt-2 font-serif text-3xl text-gold-300">
-                {rewardPoints.toLocaleString("id-ID")}
+                {rewardPoints.toLocaleString("en-US")}
               </p>
-              <p className="mt-1 text-[11px] text-white/30">poin terkumpul</p>
+              <p className="mt-1 text-[11px] text-white/30">points earned</p>
             </div>
             <div className="card-glass p-5">
               <p className="text-[10px] tracking-[.2em] text-white/35">
-                TOTAL BELANJA
+                TOTAL SPENT
               </p>
               <p className="mt-2 font-serif text-2xl text-white">
                 {fmtRp(totalSpent)}
               </p>
-              <p className="mt-1 text-[11px] text-white/30">sepanjang waktu</p>
+              <p className="mt-1 text-[11px] text-white/30">all time</p>
             </div>
           </div>
 
           <div className="mt-12">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <h2 className="font-serif text-3xl">Reservasi Saya</h2>
+              <h2 className="font-serif text-3xl">My Reservations</h2>
               <div className="flex gap-2">
                 {(
                   [
-                    ["all", "Semua"],
-                    ["upcoming", "Akan Datang"],
-                    ["completed", "Selesai"],
+                    ["all", "All"],
+                    ["upcoming", "Upcoming"],
+                    ["completed", "Completed"],
                   ] as const
                 ).map(([tabKey, label]) => (
                   <button
@@ -2028,13 +2031,13 @@ export default function DashboardPage() {
             {filteredBookings.length === 0 ? (
               <div className="py-20 text-center">
                 <p className="font-serif text-xl text-white/50">
-                  Belum ada reservasi
+                  No reservations yet
                 </p>
                 <button
                   onClick={() => goPage("home")}
                   className="btn-gold mt-6 px-6 py-2.5 text-xs"
                 >
-                  Cari Hotel
+                  Explore Hotels
                 </button>
               </div>
             ) : (
@@ -2059,8 +2062,8 @@ export default function DashboardPage() {
                           </h3>
                           <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold tracking-wider text-emerald-300">
                             {b.status === "upcoming"
-                              ? "AKAN DATANG"
-                              : "SELESAI"}
+                              ? "UPCOMING"
+                              : "COMPLETED"}
                           </span>
                         </div>
                         <p className="mt-1 text-[11px] text-white/35">
@@ -2071,14 +2074,14 @@ export default function DashboardPage() {
                           <span>
                             📅 {fmtDate(b.checkIn)} → {fmtDate(b.checkOut)}
                           </span>
-                          <span>🌙 {b.nights} malam</span>
-                          <span>👤 {b.guests} tamu</span>
+                          <span>🌙 {b.nights} night(s)</span>
+                          <span>👤 {b.guests} guest(s)</span>
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center justify-between gap-4 border-t border-white/10 pt-4 sm:flex-col sm:items-end sm:border-0 sm:pt-0">
                         <div className="text-right">
                           <p className="text-[9px] tracking-widest text-white/25">
-                            KODE
+                            CODE
                           </p>
                           <p className="font-mono text-xs text-gold-300">
                             {b.code}
@@ -2091,7 +2094,7 @@ export default function DashboardPage() {
                           onClick={() => setDetailModalBooking(b)}
                           className="rounded-lg border border-white/15 px-3.5 py-2 text-[10px] font-medium text-white/60 transition hover:border-gold-400/50 hover:text-gold-300"
                         >
-                          Detail
+                          Details
                         </button>
                       </div>
                     </div>
