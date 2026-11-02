@@ -1,6 +1,12 @@
-from typing import List, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+from database import (
+    clear_user_chat_history_db,
+    get_user_chat_history_db,
+    save_user_chat_history_db,
+)
 from llm.config import (
     LLMConfigUpdate,
     get_active_provider_info,
@@ -24,6 +30,12 @@ class ChatRequest(BaseModel):
     userEmail: Optional[str] = "demo@aurelia.com"
 
 
+class SaveChatHistoryRequest(BaseModel):
+    userEmail: str
+    messages: List[Dict[str, Any]]
+    quickReplies: List[str] = []
+
+
 @router.post("/chat")
 async def chat_endpoint(payload: ChatRequest):
     raw_msgs = [{"role": m.role, "content": m.content} for m in payload.messages]
@@ -32,6 +44,31 @@ async def chat_endpoint(payload: ChatRequest):
         user_email=payload.userEmail or "demo@aurelia.com",
     )
     return result
+
+
+@router.get("/history")
+def get_chat_history_endpoint(user_email: str = Query(...)):
+    saved = get_user_chat_history_db(user_email)
+    if not saved:
+        return {"userEmail": user_email.strip().lower(), "messages": None, "quickReplies": None}
+    return saved
+
+
+@router.post("/history")
+def save_chat_history_endpoint(payload: SaveChatHistoryRequest):
+    save_user_chat_history_db(
+        user_email=payload.userEmail,
+        messages=payload.messages,
+        quick_replies=payload.quickReplies,
+        updated_at=datetime.utcnow().isoformat(),
+    )
+    return {"status": "saved", "userEmail": payload.userEmail.strip().lower()}
+
+
+@router.delete("/history")
+def delete_chat_history_endpoint(user_email: str = Query(...)):
+    clear_user_chat_history_db(user_email)
+    return {"status": "cleared", "userEmail": user_email.strip().lower()}
 
 
 @router.get("/config")
@@ -65,7 +102,7 @@ def set_llm_config(
     if role != "admin":
         raise HTTPException(
             status_code=403,
-            detail="Akses ditolak: Hanya Admin yang dapat mengubah konfigurasi model LLM.",
+            detail="Access denied: Only Administrators can modify the LLM model configuration.",
         )
     active = update_runtime_config(payload)
     return {

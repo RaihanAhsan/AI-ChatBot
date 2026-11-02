@@ -414,6 +414,17 @@ def init_db() -> None:
         """
     )
 
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS chat_histories (
+            user_email TEXT PRIMARY KEY,
+            messages_json TEXT NOT NULL,
+            quick_replies_json TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+        """
+    )
+
     # Seed Demo User (role = 'user')
     cur.execute("SELECT email FROM users WHERE email = ?", ("demo@aurelia.com",))
     if not cur.fetchone():
@@ -552,3 +563,66 @@ def get_user_bookings_db(user_email: str) -> List[Dict[str, Any]]:
     rows = [dict(r) for r in cur.fetchall()]
     conn.close()
     return rows
+
+
+def get_user_chat_history_db(user_email: str) -> Optional[Dict[str, Any]]:
+    email_key = (user_email or "").strip().lower()
+    if not email_key:
+        return None
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT messages_json, quick_replies_json, updated_at FROM chat_histories WHERE user_email = ?",
+        (email_key,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return None
+    try:
+        return {
+            "userEmail": email_key,
+            "messages": json.loads(row["messages_json"]),
+            "quickReplies": json.loads(row["quick_replies_json"]),
+            "updatedAt": row["updated_at"],
+        }
+    except Exception:
+        return None
+
+
+def save_user_chat_history_db(
+    user_email: str,
+    messages: List[Dict[str, Any]],
+    quick_replies: List[str],
+    updated_at: str = "",
+) -> None:
+    email_key = (user_email or "").strip().lower()
+    if not email_key:
+        return
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT OR REPLACE INTO chat_histories (user_email, messages_json, quick_replies_json, updated_at)
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            email_key,
+            json.dumps(messages),
+            json.dumps(quick_replies),
+            updated_at,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def clear_user_chat_history_db(user_email: str) -> None:
+    email_key = (user_email or "").strip().lower()
+    if not email_key:
+        return
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM chat_histories WHERE user_email = ?", (email_key,))
+    conn.commit()
+    conn.close()

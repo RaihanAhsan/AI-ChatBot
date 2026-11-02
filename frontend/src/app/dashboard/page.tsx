@@ -7,6 +7,7 @@ import {
   BookingItem,
   ChatTurn,
   Hotel,
+  LLMBookingCheckout,
   LLMPriceQuote,
   Room,
   UserProfile,
@@ -25,7 +26,12 @@ import {
   saveAuthSession,
   todayISO,
 } from "@/lib/hotelApi";
-import { sendLLMChatMessage } from "@/lib/llmApi";
+import {
+  clearUserChatHistory,
+  fetchUserChatHistory,
+  saveUserChatHistory,
+  sendLLMChatMessage,
+} from "@/lib/llmApi";
 import FloatingConcierge from "@/components/llm/FloatingConcierge";
 import ConciergeStudioView from "@/components/llm/ConciergeStudioView";
 
@@ -45,14 +51,14 @@ interface ToastMsg {
 }
 
 const INITIAL_BOT_WELCOME =
-  'Welcome to <b class="text-gold-300">Aurelia Collection</b> ✦<br><br>I am your Aurelia Concierge, ready to help you discover extraordinary five-star properties, calculate room rates & taxes, or check your reservation status. How may I assist you today?';
+  'Welcome to <b class="text-gold-300">Aurelia Collection</b> ✦<br><br>I am your Aurelia Concierge, ready to help you book single or multi-city itineraries directly via chat (e.g., <b class="text-gold-300">1 week: 2 days in Jakarta & 5 days in Bali</b>), calculate room rates & taxes, or check your reservation status. How may I assist you today?';
 
 const DEFAULT_QUICK_REPLIES = [
+  "Book 1 week: 2 days in Jakarta, 5 days in Bali",
   "Recommended hotels in Bali",
   "Calculate 3 nights in Maldives",
-  "How to book a room?",
   "Payment methods",
-  "Cancellation policy",
+  "Check my reservation status",
 ];
 
 export default function DashboardPage() {
@@ -78,8 +84,9 @@ export default function DashboardPage() {
   const [detailCheckOut, setDetailCheckOut] = useState(todayISO(3));
   const [detailGuests, setDetailGuests] = useState(2);
 
-  // Booking Draft & Guest Form
+  // Booking Draft & Multi-Stay Itinerary
   const [draft, setDraft] = useState<BookingDraft | null>(null);
+  const [checkoutItems, setCheckoutItems] = useState<BookingDraft[]>([]);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("+62 812 3456 7890");
@@ -97,6 +104,7 @@ export default function DashboardPage() {
   const [paymentErr, setPaymentErr] = useState("");
   const [processingText, setProcessingText] = useState<string | null>(null);
   const [lastBooking, setLastBooking] = useState<BookingItem | null>(null);
+  const [lastBookings, setLastBookings] = useState<BookingItem[]>([]);
 
   // Profile & Bookings
   const [bookings, setBookings] = useState<BookingItem[]>([]);
@@ -150,6 +158,30 @@ export default function DashboardPage() {
     setGuestPhone(savedUser.phone || "+62 812 3456 7890");
     setAuthChecked(true);
 
+    // Load per-user isolated chat history (persists across refresh, separated per user email)
+    fetchUserChatHistory(savedUser.email).then((savedChat) => {
+      if (savedChat.messages && savedChat.messages.length > 0) {
+        setChatMessages(savedChat.messages);
+        if (savedChat.quickReplies && savedChat.quickReplies.length > 0) {
+          setQuickReplies(savedChat.quickReplies);
+        }
+      } else {
+        const welcomeTurn: ChatTurn = {
+          id: "welcome-" + savedUser.email.toLowerCase(),
+          role: "assistant",
+          content: INITIAL_BOT_WELCOME,
+          timestamp: new Date().toISOString(),
+        };
+        setChatMessages([welcomeTurn]);
+        setQuickReplies(DEFAULT_QUICK_REPLIES);
+        saveUserChatHistory(
+          savedUser.email,
+          [welcomeTurn],
+          DEFAULT_QUICK_REPLIES
+        );
+      }
+    });
+
     apiGetHotels().then((list) => {
       if (list && list.length > 0) setHotels(list);
     });
@@ -177,7 +209,7 @@ export default function DashboardPage() {
   };
 
   // Hotel Actions
-  const openHotel = (hotelId: string) => {
+  const openHotel = (hotelId: string, nightsOverride?: number) => {
     const h =
       hotels.find((x) => x.id === hotelId) ||
       FALLBACK_HOTELS.find((x) => x.id === hotelId);
@@ -186,7 +218,12 @@ export default function DashboardPage() {
     setSelectedRoom(h.rooms[0]);
     const ci = searchCheckIn || todayISO(1);
     let co = searchCheckOut || todayISO(3);
-    if (nightsBetween(ci, co) <= 0) {
+    if (nightsOverride && nightsOverride > 0) {
+      const d = new Date(ci);
+      d.setDate(d.getDate() + nightsOverride);
+      co = d.toISOString().split("T")[0];
+      setSearchCheckOut(co);
+    } else if (nightsBetween(ci, co) <= 0) {
       const d = new Date(ci);
       d.setDate(d.getDate() + 2);
       co = d.toISOString().split("T")[0];
@@ -196,7 +233,7 @@ export default function DashboardPage() {
     goPage("detail");
   };
 
-  const quickBookHotel = (hotelId: string) => {
+  const quickBookHotel = (hotelId: string, nightsOverride?: number) => {
     const h =
       hotels.find((x) => x.id === hotelId) ||
       FALLBACK_HOTELS.find((x) => x.id === hotelId) ||
@@ -206,7 +243,13 @@ export default function DashboardPage() {
     const ci = detailCheckIn || searchCheckIn || todayISO(1);
     let co = detailCheckOut || searchCheckOut || todayISO(3);
     let n = nightsBetween(ci, co);
-    if (n <= 0) {
+    if (nightsOverride && nightsOverride > 0) {
+      const d = new Date(ci);
+      d.setDate(d.getDate() + nightsOverride);
+      co = d.toISOString().split("T")[0];
+      n = nightsOverride;
+      setSearchCheckOut(co);
+    } else if (n <= 0) {
       const d = new Date(ci);
       d.setDate(d.getDate() + 2);
       co = d.toISOString().split("T")[0];
@@ -216,7 +259,7 @@ export default function DashboardPage() {
     setSelectedRoom(r);
     setDetailCheckIn(ci);
     setDetailCheckOut(co);
-    setDraft({
+    const singleDraft: BookingDraft = {
       hotelId: h.id,
       hotelName: h.name,
       hotelImage: h.image,
@@ -228,7 +271,9 @@ export default function DashboardPage() {
       checkOut: co,
       guests: detailGuests || 2,
       nights: n,
-    });
+    };
+    setDraft(singleDraft);
+    setCheckoutItems([singleDraft]);
     if (user) {
       setGuestName((prev) => prev || user.name);
       setGuestEmail((prev) => prev || user.email);
@@ -276,7 +321,7 @@ export default function DashboardPage() {
     }
 
     setSelectedRoom(r);
-    setDraft({
+    const singleDraft: BookingDraft = {
       hotelId: h.id,
       hotelName: h.name,
       hotelImage: h.image,
@@ -288,7 +333,9 @@ export default function DashboardPage() {
       checkOut: co,
       guests: detailGuests || 2,
       nights: n,
-    });
+    };
+    setDraft(singleDraft);
+    setCheckoutItems([singleDraft]);
     if (user) {
       setGuestName((prev) => prev || user.name);
       setGuestEmail((prev) => prev || user.email);
@@ -302,11 +349,13 @@ export default function DashboardPage() {
     const r = h.rooms.find((x) => x.id === quote.roomId) || h.rooms[0];
     setSelectedHotel(h);
     setSelectedRoom(r);
-    const ci = todayISO(1);
-    const co = todayISO(1 + quote.nights);
+    const ci = quote.checkIn || detailCheckIn || todayISO(1);
+    const co = quote.checkOut || todayISO(1 + quote.nights);
     setDetailCheckIn(ci);
     setDetailCheckOut(co);
-    setDraft({
+    setSearchCheckIn(ci);
+    setSearchCheckOut(co);
+    const singleDraft: BookingDraft = {
       hotelId: h.id,
       hotelName: h.name,
       hotelImage: h.image,
@@ -318,7 +367,9 @@ export default function DashboardPage() {
       checkOut: co,
       guests: 2,
       nights: quote.nights,
-    });
+    };
+    setDraft(singleDraft);
+    setCheckoutItems([singleDraft]);
     if (user) {
       setGuestName((prev) => prev || user.name);
       setGuestEmail((prev) => prev || user.email);
@@ -326,6 +377,79 @@ export default function DashboardPage() {
     goPage("booking");
     showToast(
       `Ready to book ${quote.nights} night(s) at ${h.name}!`,
+      "info"
+    );
+  };
+
+  // Build BookingDraft array from LLMBookingCheckout (supports 1 or multiple stays)
+  const buildDraftsFromCheckout = (
+    checkout: LLMBookingCheckout
+  ): BookingDraft[] => {
+    const gName = guestName.trim() || user?.name || "Aurelia Guest";
+    const gEmail = guestEmail.trim() || user?.email || "demo@aurelia.com";
+    const gPhone = guestPhone.trim() || user?.phone || "+62 812 3456 7890";
+
+    return checkout.items.map((leg) => ({
+      hotelId: leg.hotelId,
+      hotelName: leg.hotelName,
+      hotelImage: leg.hotelImage,
+      hotelLocation: leg.hotelLocation,
+      roomId: leg.roomId,
+      roomName: leg.roomName,
+      roomPrice: leg.roomPrice,
+      checkIn: leg.checkIn,
+      checkOut: leg.checkOut,
+      guests: leg.guests || 2,
+      nights: leg.nights,
+      guestName: gName,
+      guestEmail: gEmail,
+      guestPhone: gPhone,
+      guestCountry: guestCountry || "Indonesia",
+      requests: guestRequests.trim(),
+    }));
+  };
+
+  // Direct Chat-to-Payment link handler: jumps straight to the Payment page!
+  const handleDirectCheckoutPayment = (checkout: LLMBookingCheckout) => {
+    const drafts = buildDraftsFromCheckout(checkout);
+    if (drafts.length === 0) return;
+    if (user) {
+      setGuestName((prev) => prev || user.name);
+      setGuestEmail((prev) => prev || user.email);
+    }
+    setAgreeTerms(true);
+    setDetailCheckIn(drafts[0].checkIn);
+    setDetailCheckOut(drafts[0].checkOut);
+    setSearchCheckIn(drafts[0].checkIn);
+    setSearchCheckOut(drafts[0].checkOut);
+    setDraft(drafts[0]);
+    setCheckoutItems(drafts);
+    goPage("payment");
+    showToast(
+      checkout.isMultiStay
+        ? `Multi-city checkout ready: ${checkout.totalStays} stays (${checkout.totalNights} nights)`
+        : `Direct checkout ready: ${drafts[0].hotelName} (${drafts[0].nights} nights)`,
+      "info"
+    );
+  };
+
+  // Review Guest Details handler from Chat Checkout Card
+  const handleReviewCheckoutBooking = (checkout: LLMBookingCheckout) => {
+    const drafts = buildDraftsFromCheckout(checkout);
+    if (drafts.length === 0) return;
+    if (user) {
+      setGuestName((prev) => prev || user.name);
+      setGuestEmail((prev) => prev || user.email);
+    }
+    setDetailCheckIn(drafts[0].checkIn);
+    setDetailCheckOut(drafts[0].checkOut);
+    setSearchCheckIn(drafts[0].checkIn);
+    setSearchCheckOut(drafts[0].checkOut);
+    setDraft(drafts[0]);
+    setCheckoutItems(drafts);
+    goPage("booking");
+    showToast(
+      `Loaded ${checkout.totalStays} stay(s) (${checkout.totalNights} nights) for review`,
       "info"
     );
   };
@@ -351,14 +475,25 @@ export default function DashboardPage() {
     }
     if (!draft) return;
 
-    setDraft({
+    const updatedDraft = {
       ...draft,
       guestName: guestName.trim(),
       guestEmail: guestEmail.trim(),
       guestPhone: guestPhone.trim(),
       guestCountry,
       requests: guestRequests.trim(),
-    });
+    };
+    setDraft(updatedDraft);
+    setCheckoutItems((prev) =>
+      (prev.length > 0 ? prev : [updatedDraft]).map((item) => ({
+        ...item,
+        guestName: guestName.trim(),
+        guestEmail: guestEmail.trim(),
+        guestPhone: guestPhone.trim(),
+        guestCountry,
+        requests: guestRequests.trim(),
+      }))
+    );
     goPage("payment");
   };
 
@@ -379,34 +514,63 @@ export default function DashboardPage() {
   };
 
   const processPayment = async (methodLabel = "Credit Card") => {
-    if (!draft) return;
-    setProcessingText("Processing payment…");
-    setTimeout(() => setProcessingText("Confirming your reservation…"), 1000);
+    const itemsToBook =
+      checkoutItems.length > 0 ? checkoutItems : draft ? [draft] : [];
+    if (itemsToBook.length === 0) return;
+
+    setProcessingText(
+      itemsToBook.length > 1
+        ? `Processing payment for ${itemsToBook.length} reservations…`
+        : "Processing payment…"
+    );
+    setTimeout(
+      () =>
+        setProcessingText(
+          itemsToBook.length > 1
+            ? `Recording ${itemsToBook.length} stays into the database…`
+            : "Confirming your reservation…"
+        ),
+      1000
+    );
 
     setTimeout(async () => {
-      const created = await apiCreateBooking({
-        userEmail: user?.email || "demo@aurelia.com",
-        hotelId: draft.hotelId,
-        roomId: draft.roomId,
-        checkIn: draft.checkIn,
-        checkOut: draft.checkOut,
-        guests: draft.guests,
-        guestName: draft.guestName || guestName,
-        guestEmail: draft.guestEmail || guestEmail,
-        guestPhone: draft.guestPhone || guestPhone,
-        guestCountry: draft.guestCountry || guestCountry,
-        requests: draft.requests || guestRequests,
-        paymentMethod: methodLabel,
-      });
+      const createdList: BookingItem[] = [];
+      for (const item of itemsToBook) {
+        const created = await apiCreateBooking({
+          userEmail: user?.email || "demo@aurelia.com",
+          hotelId: item.hotelId,
+          roomId: item.roomId,
+          checkIn: item.checkIn,
+          checkOut: item.checkOut,
+          guests: item.guests,
+          guestName: item.guestName || guestName || user?.name || "Aurelia Guest",
+          guestEmail:
+            item.guestEmail || guestEmail || user?.email || "demo@aurelia.com",
+          guestPhone: item.guestPhone || guestPhone || "+62 812 3456 7890",
+          guestCountry: item.guestCountry || guestCountry || "Indonesia",
+          requests: item.requests || guestRequests,
+          paymentMethod: methodLabel,
+        });
+        createdList.push(created);
+      }
 
-      const updatedBookings = [created, ...bookings];
+      const updatedBookings = [...createdList, ...bookings];
       setBookings(updatedBookings);
-      localStorage.setItem("aurelia_bookings", JSON.stringify(updatedBookings));
-      setLastBooking(created);
+      localStorage.setItem(
+        "aurelia_bookings",
+        JSON.stringify(updatedBookings)
+      );
+      setLastBooking(createdList[0]);
+      setLastBookings(createdList);
       setProcessingText(null);
       goPage("success");
       fireConfetti();
-      showToast("Payment successful! Reservation confirmed.", "success");
+      showToast(
+        createdList.length > 1
+          ? `Payment successful! All ${createdList.length} reservations saved to database.`
+          : "Payment successful! Reservation confirmed.",
+        "success"
+      );
     }, 2100);
   };
 
@@ -433,8 +597,9 @@ export default function DashboardPage() {
     processPayment("Credit Card");
   };
 
-  // Chatbot Handler
+  // Chatbot Handler (persists per user email across refreshes)
   const handleSendChatMessage = async (text: string) => {
+    const activeEmail = user?.email || "demo@aurelia.com";
     const userTurn: ChatTurn = {
       id: "u-" + Date.now(),
       role: "user",
@@ -443,6 +608,7 @@ export default function DashboardPage() {
     };
     const nextHistory = [...chatMessages, userTurn];
     setChatMessages(nextHistory);
+    saveUserChatHistory(activeEmail, nextHistory, quickReplies);
     setIsChatTyping(true);
 
     try {
@@ -450,10 +616,26 @@ export default function DashboardPage() {
         role: m.role,
         content: m.content,
       }));
-      const res = await sendLLMChatMessage(
-        apiMessages,
-        user?.email || "demo@aurelia.com"
-      );
+      const res = await sendLLMChatMessage(apiMessages, activeEmail);
+
+      // Sync detailCheckIn/detailCheckOut with any explicit dates & duration returned by the AI Concierge
+      const firstLeg = res.bookingCheckout?.items?.[0];
+      const syncedNights =
+        firstLeg?.nights ||
+        res.priceQuote?.nights ||
+        res.recommendedHotels?.[0]?.nights;
+      if (syncedNights && syncedNights > 0) {
+        const ci =
+          firstLeg?.checkIn || res.priceQuote?.checkIn || todayISO(1);
+        const co =
+          firstLeg?.checkOut ||
+          res.priceQuote?.checkOut ||
+          todayISO(1 + syncedNights);
+        setDetailCheckIn(ci);
+        setDetailCheckOut(co);
+        setSearchCheckIn(ci);
+        setSearchCheckOut(co);
+      }
 
       const botTurn: ChatTurn = {
         id: "b-" + Date.now(),
@@ -462,28 +644,35 @@ export default function DashboardPage() {
         intent: res.intent,
         recommendedHotels: res.recommendedHotels,
         priceQuote: res.priceQuote,
+        bookingCheckout: res.bookingCheckout || null,
         metadata: res.metadata,
         timestamp: new Date().toISOString(),
       };
-      setChatMessages((prev) => [...prev, botTurn]);
-      if (res.quickReplies && res.quickReplies.length > 0) {
-        setQuickReplies(res.quickReplies);
-      }
+      const finalHistory = [...nextHistory, botTurn];
+      const nextQr =
+        res.quickReplies && res.quickReplies.length > 0
+          ? res.quickReplies
+          : quickReplies;
+      setChatMessages(finalHistory);
+      setQuickReplies(nextQr);
+      saveUserChatHistory(activeEmail, finalHistory, nextQr);
     } finally {
       setIsChatTyping(false);
     }
   };
 
   const handleResetChat = () => {
-    setChatMessages([
-      {
-        id: "welcome-" + Date.now(),
-        role: "assistant",
-        content: INITIAL_BOT_WELCOME,
-        timestamp: new Date().toISOString(),
-      },
-    ]);
+    const activeEmail = user?.email || "demo@aurelia.com";
+    const freshWelcome: ChatTurn = {
+      id: "welcome-" + Date.now(),
+      role: "assistant",
+      content: INITIAL_BOT_WELCOME,
+      timestamp: new Date().toISOString(),
+    };
+    clearUserChatHistory(activeEmail);
+    setChatMessages([freshWelcome]);
     setQuickReplies(DEFAULT_QUICK_REPLIES);
+    saveUserChatHistory(activeEmail, [freshWelcome], DEFAULT_QUICK_REPLIES);
     showToast("Started a new conversation.", "info");
   };
 
@@ -511,9 +700,21 @@ export default function DashboardPage() {
   const rewardPoints = Math.floor(totalSpent / 100000);
 
   const detailNights = nightsBetween(detailCheckIn, detailCheckOut);
-  const draftTotals = draft
-    ? calcTotals(draft.roomPrice, draft.nights)
-    : { subtotal: 0, tax: 0, service: 0, total: 0 };
+  const activeDrafts =
+    checkoutItems.length > 0 ? checkoutItems : draft ? [draft] : [];
+  const draftTotals = activeDrafts.reduce(
+    (acc, item) => {
+      const t = calcTotals(item.roomPrice, item.nights);
+      return {
+        subtotal: acc.subtotal + t.subtotal,
+        tax: acc.tax + t.tax,
+        service: acc.service + t.service,
+        total: acc.total + t.total,
+      };
+    },
+    { subtotal: 0, tax: 0, service: 0, total: 0 }
+  );
+  const totalCheckoutNights = activeDrafts.reduce((s, x) => s + x.nights, 0);
 
   return (
     <div className="min-h-screen">
@@ -1529,63 +1730,138 @@ export default function DashboardPage() {
                   alt=""
                 />
                 <div className="p-6">
-                  <h3 className="font-serif text-xl">{draft.hotelName}</h3>
-                  <p className="mt-1 text-[11px] text-white/40">
-                    {draft.hotelLocation}
-                  </p>
-                  <div className="my-5 h-px bg-white/10"></div>
-                  <div className="space-y-2.5 text-xs">
-                    <div className="flex justify-between text-white/45">
-                      <span>Room</span>
-                      <span className="text-white/80">{draft.roomName}</span>
-                    </div>
-                    <div className="flex justify-between text-white/45">
-                      <span>Check-in</span>
-                      <span className="text-white/80">
-                        {fmtDate(draft.checkIn)}
+                  {activeDrafts.length > 1 ? (
+                    <>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gold-400">
+                        ✦ MULTI-CITY ITINERARY ({activeDrafts.length} STAYS •{" "}
+                        {totalCheckoutNights} NIGHTS)
                       </span>
-                    </div>
-                    <div className="flex justify-between text-white/45">
-                      <span>Check-out</span>
-                      <span className="text-white/80">
-                        {fmtDate(draft.checkOut)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-white/45">
-                      <span>Duration</span>
-                      <span className="text-white/80">
-                        {draft.nights} night(s)
-                      </span>
-                    </div>
-                    <div className="my-2 h-px bg-white/10"></div>
-                    <div className="flex justify-between text-white/45">
-                      <span>
-                        {fmtRp(draft.roomPrice)} × {draft.nights}
-                      </span>
-                      <span className="text-white/80">
-                        {fmtRp(draftTotals.subtotal)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-white/45">
-                      <span>Tax (11%)</span>
-                      <span className="text-white/80">
-                        {fmtRp(draftTotals.tax)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-white/45">
-                      <span>Service (5%)</span>
-                      <span className="text-white/80">
-                        {fmtRp(draftTotals.service)}
-                      </span>
-                    </div>
-                    <div className="my-2 h-px bg-white/10"></div>
-                    <div className="flex justify-between font-semibold">
-                      <span className="text-white/70">Total</span>
-                      <span className="text-gold-300">
-                        {fmtRp(draftTotals.total)}
-                      </span>
-                    </div>
-                  </div>
+                      <h3 className="mt-1 font-serif text-xl text-white">
+                        {activeDrafts.map((d) => d.hotelName).join(" + ")}
+                      </h3>
+                      <div className="my-4 h-px bg-white/10"></div>
+                      <div className="space-y-3 text-xs">
+                        {activeDrafts.map((item, idx) => {
+                          const itemTot = calcTotals(
+                            item.roomPrice,
+                            item.nights
+                          );
+                          return (
+                            <div
+                              key={`${item.hotelId}-${idx}`}
+                              className="rounded-xl border border-white/10 bg-white/[.03] p-3"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <p className="font-semibold text-gold-300">
+                                    Stay #{idx + 1}: {item.hotelName}
+                                  </p>
+                                  <p className="text-[11px] text-white/60">
+                                    {item.roomName} ({item.nights} nights)
+                                  </p>
+                                  <p className="mt-0.5 text-[10px] text-white/40">
+                                    {fmtDate(item.checkIn)} →{" "}
+                                    {fmtDate(item.checkOut)}
+                                  </p>
+                                </div>
+                                <span className="font-semibold text-white">
+                                  {fmtRp(itemTot.total)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div className="my-2 h-px bg-white/10"></div>
+                        <div className="flex justify-between text-white/45">
+                          <span>
+                            Combined Subtotal ({totalCheckoutNights} nights)
+                          </span>
+                          <span className="text-white/80">
+                            {fmtRp(draftTotals.subtotal)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-white/45">
+                          <span>Tax (11%)</span>
+                          <span className="text-white/80">
+                            {fmtRp(draftTotals.tax)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-white/45">
+                          <span>Service (5%)</span>
+                          <span className="text-white/80">
+                            {fmtRp(draftTotals.service)}
+                          </span>
+                        </div>
+                        <div className="my-2 h-px bg-white/10"></div>
+                        <div className="flex justify-between font-semibold">
+                          <span className="text-white/70">Grand Total</span>
+                          <span className="text-gold-300">
+                            {fmtRp(draftTotals.total)}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="font-serif text-xl">{draft.hotelName}</h3>
+                      <p className="mt-1 text-[11px] text-white/40">
+                        {draft.hotelLocation}
+                      </p>
+                      <div className="my-5 h-px bg-white/10"></div>
+                      <div className="space-y-2.5 text-xs">
+                        <div className="flex justify-between text-white/45">
+                          <span>Room</span>
+                          <span className="text-white/80">{draft.roomName}</span>
+                        </div>
+                        <div className="flex justify-between text-white/45">
+                          <span>Check-in</span>
+                          <span className="text-white/80">
+                            {fmtDate(draft.checkIn)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-white/45">
+                          <span>Check-out</span>
+                          <span className="text-white/80">
+                            {fmtDate(draft.checkOut)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-white/45">
+                          <span>Duration</span>
+                          <span className="text-white/80">
+                            {draft.nights} night(s)
+                          </span>
+                        </div>
+                        <div className="my-2 h-px bg-white/10"></div>
+                        <div className="flex justify-between text-white/45">
+                          <span>
+                            {fmtRp(draft.roomPrice)} × {draft.nights}
+                          </span>
+                          <span className="text-white/80">
+                            {fmtRp(draftTotals.subtotal)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-white/45">
+                          <span>Tax (11%)</span>
+                          <span className="text-white/80">
+                            {fmtRp(draftTotals.tax)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-white/45">
+                          <span>Service (5%)</span>
+                          <span className="text-white/80">
+                            {fmtRp(draftTotals.service)}
+                          </span>
+                        </div>
+                        <div className="my-2 h-px bg-white/10"></div>
+                        <div className="flex justify-between font-semibold">
+                          <span className="text-white/70">Total</span>
+                          <span className="text-gold-300">
+                            {fmtRp(draftTotals.total)}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </aside>
@@ -1819,37 +2095,95 @@ export default function DashboardPage() {
 
             <aside className="lg:sticky lg:top-24 lg:self-start">
               <div className="card-glass p-6">
-                <h3 className="font-serif text-xl">Order Summary</h3>
-                <div className="my-5 h-px bg-white/10"></div>
-                <div className="space-y-2.5 text-xs">
-                  <div className="flex justify-between text-white/45">
-                    <span>Hotel</span>
-                    <span className="text-white/80">{draft.hotelName}</span>
-                  </div>
-                  <div className="flex justify-between text-white/45">
-                    <span>Room</span>
-                    <span className="text-white/80">{draft.roomName}</span>
-                  </div>
-                  <div className="flex justify-between text-white/45">
-                    <span>Duration</span>
-                    <span className="text-white/80">
-                      {draft.nights} night(s)
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif text-xl">Order Summary</h3>
+                  {activeDrafts.length > 1 && (
+                    <span className="rounded-full bg-gold-400/15 px-2.5 py-0.5 text-[10px] font-bold text-gold-300">
+                      {activeDrafts.length} Stays • {totalCheckoutNights} Nights
                     </span>
-                  </div>
-                  <div className="my-2 h-px bg-white/10"></div>
-                  <div className="flex justify-between text-white/45">
-                    <span>Subtotal</span>
-                    <span className="text-white/80">
-                      {fmtRp(draftTotals.subtotal)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-white/45">
-                    <span>Tax & Service</span>
-                    <span className="text-white/80">
-                      {fmtRp(draftTotals.tax + draftTotals.service)}
-                    </span>
-                  </div>
+                  )}
                 </div>
+                <div className="my-5 h-px bg-white/10"></div>
+                {activeDrafts.length > 1 ? (
+                  <div className="space-y-3 text-xs">
+                    {activeDrafts.map((item, idx) => {
+                      const itemTot = calcTotals(item.roomPrice, item.nights);
+                      return (
+                        <div
+                          key={`${item.hotelId}-${idx}`}
+                          className="rounded-xl border border-white/10 bg-white/[.03] p-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-gold-300">
+                                Stay #{idx + 1}: {item.hotelName}
+                              </p>
+                              <p className="text-[11px] text-white/65">
+                                {item.roomName} • {item.nights} night(s)
+                              </p>
+                              <p className="mt-0.5 text-[10px] text-white/40">
+                                📅 {fmtDate(item.checkIn)} →{" "}
+                                {fmtDate(item.checkOut)}
+                              </p>
+                            </div>
+                            <span className="font-semibold text-white">
+                              {fmtRp(itemTot.total)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="my-2 h-px bg-white/10"></div>
+                    <div className="flex justify-between text-white/45">
+                      <span>Combined Subtotal</span>
+                      <span className="text-white/80">
+                        {fmtRp(draftTotals.subtotal)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-white/45">
+                      <span>Combined Tax (11%) & Service (5%)</span>
+                      <span className="text-white/80">
+                        {fmtRp(draftTotals.tax + draftTotals.service)}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex justify-between text-white/45">
+                      <span>Hotel</span>
+                      <span className="text-white/80">{draft.hotelName}</span>
+                    </div>
+                    <div className="flex justify-between text-white/45">
+                      <span>Room</span>
+                      <span className="text-white/80">{draft.roomName}</span>
+                    </div>
+                    <div className="flex justify-between text-white/45">
+                      <span>Dates</span>
+                      <span className="text-white/80">
+                        {fmtDate(draft.checkIn)} → {fmtDate(draft.checkOut)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-white/45">
+                      <span>Duration</span>
+                      <span className="text-white/80">
+                        {draft.nights} night(s)
+                      </span>
+                    </div>
+                    <div className="my-2 h-px bg-white/10"></div>
+                    <div className="flex justify-between text-white/45">
+                      <span>Subtotal</span>
+                      <span className="text-white/80">
+                        {fmtRp(draftTotals.subtotal)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-white/45">
+                      <span>Tax & Service</span>
+                      <span className="text-white/80">
+                        {fmtRp(draftTotals.tax + draftTotals.service)}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="my-5 h-px bg-white/10"></div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-white/45">Total Due</span>
@@ -1874,7 +2208,9 @@ export default function DashboardPage() {
           </div>
 
           <p className="text-[11px] tracking-[.4em] text-gold-400">
-            RESERVATION CONFIRMED
+            {lastBookings.length > 1
+              ? `${lastBookings.length} RESERVATIONS CONFIRMED`
+              : "RESERVATION CONFIRMED"}
           </p>
           <h1 className="mt-4 font-serif text-4xl text-white sm:text-5xl">
             Thank you,{" "}
@@ -1884,47 +2220,70 @@ export default function DashboardPage() {
             !
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/45">
-            A confirmation email has been sent. Please present your booking code
-            below upon check-in.
+            {lastBookings.length > 1
+              ? `All ${lastBookings.length} stays in your itinerary have been recorded in the database. Present your booking codes below upon check-in.`
+              : "A confirmation email has been sent. Please present your booking code below upon check-in."}
           </p>
 
-          <div className="mt-10 w-full max-w-md">
-            <div className="card-glass p-7">
-              <p className="text-[10px] tracking-[.3em] text-white/35">
-                BOOKING CODE
-              </p>
-              <p className="mt-2 font-mono text-3xl tracking-[.25em] text-gold-300">
-                {lastBooking.code}
-              </p>
-              <div className="my-6 h-px bg-white/10"></div>
-              <div className="space-y-3 text-left text-xs">
-                <div className="flex justify-between">
-                  <span className="text-white/40">Hotel</span>
-                  <span className="text-white/85">{lastBooking.hotelName}</span>
+          <div className="mt-10 w-full max-w-lg space-y-4">
+            {(lastBookings.length > 0 ? lastBookings : [lastBooking]).map(
+              (bk, idx) => (
+                <div key={bk.id} className="card-glass p-6">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] tracking-[.3em] text-white/35">
+                      {lastBookings.length > 1
+                        ? `STAY #${idx + 1} BOOKING CODE`
+                        : "BOOKING CODE"}
+                    </p>
+                    <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300">
+                      SAVED TO DATABASE
+                    </span>
+                  </div>
+                  <p className="mt-2 font-mono text-2xl tracking-[.25em] text-gold-300">
+                    {bk.code}
+                  </p>
+                  <div className="my-4 h-px bg-white/10"></div>
+                  <div className="space-y-2.5 text-left text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-white/40">Hotel</span>
+                      <span className="text-white/85">{bk.hotelName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/40">Room</span>
+                      <span className="text-white/85">{bk.roomName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/40">Dates</span>
+                      <span className="text-white/85">
+                        {fmtDate(bk.checkIn)} → {fmtDate(bk.checkOut)} (
+                        {bk.nights} nights)
+                      </span>
+                    </div>
+                    <div className="my-2 h-px bg-white/10"></div>
+                    <div className="flex justify-between font-semibold">
+                      <span className="text-white/60">Stay Total Paid</span>
+                      <span className="text-gold-300">{fmtRp(bk.total)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-white/40">Room</span>
-                  <span className="text-white/85">{lastBooking.roomName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/40">Dates</span>
-                  <span className="text-white/85">
-                    {fmtDate(lastBooking.checkIn)} →{" "}
-                    {fmtDate(lastBooking.checkOut)}
+              )
+            )}
+
+            {lastBookings.length > 1 && (
+              <div className="card-glass border-gold-400/40 bg-gold-400/10 p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-gold-300">
+                    Combined Grand Total Paid ({lastBookings.length} Stays)
                   </span>
-                </div>
-                <div className="my-2 h-px bg-white/10"></div>
-                <div className="flex justify-between font-semibold">
-                  <span className="text-white/60">Total Paid</span>
-                  <span className="text-gold-300">
-                    {fmtRp(lastBooking.total)}
+                  <span className="font-serif text-2xl text-gold-300">
+                    {fmtRp(lastBookings.reduce((s, b) => s + b.total, 0))}
                   </span>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex w-full max-w-lg flex-col gap-3 sm:flex-row">
             <button
               onClick={() => goPage("profile")}
               className="btn-gold flex-1 py-3 text-sm"
@@ -2117,6 +2476,8 @@ export default function DashboardPage() {
           onSelectHotel={openHotel}
           onQuickBookHotel={quickBookHotel}
           onStartQuoteBooking={startBookingFromQuote}
+          onDirectCheckoutPayment={handleDirectCheckoutPayment}
+          onReviewCheckoutBooking={handleReviewCheckoutBooking}
         />
       )}
 
@@ -2129,6 +2490,8 @@ export default function DashboardPage() {
         onSelectHotel={openHotel}
         onQuickBookHotel={quickBookHotel}
         onStartQuoteBooking={startBookingFromQuote}
+        onDirectCheckoutPayment={handleDirectCheckoutPayment}
+        onReviewCheckoutBooking={handleReviewCheckoutBooking}
       />
     </div>
   );

@@ -95,6 +95,7 @@ export interface LLMRecommendedHotel {
   price: number;
   image: string;
   topRoom: string;
+  nights?: number;
 }
 
 export interface LLMPriceQuote {
@@ -104,11 +105,44 @@ export interface LLMPriceQuote {
   roomId: string;
   roomName: string;
   roomPrice: number;
+  checkIn?: string;
+  checkOut?: string;
   nights: number;
   subtotal: number;
   tax: number;
   service: number;
   total: number;
+}
+
+export interface LLMBookingLeg {
+  hotelId: string;
+  hotelName: string;
+  hotelCity: string;
+  hotelLocation: string;
+  hotelImage: string;
+  roomId: string;
+  roomName: string;
+  roomPrice: number;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  guests: number;
+  subtotal: number;
+  tax: number;
+  service: number;
+  total: number;
+}
+
+export interface LLMBookingCheckout {
+  isMultiStay: boolean;
+  isConfirmed: boolean;
+  totalNights: number;
+  totalStays: number;
+  grandSubtotal: number;
+  grandTax: number;
+  grandService: number;
+  grandTotal: number;
+  items: LLMBookingLeg[];
 }
 
 export interface LLMMetadata {
@@ -127,6 +161,7 @@ export interface ChatTurn {
   intent?: string;
   recommendedHotels?: LLMRecommendedHotel[];
   priceQuote?: LLMPriceQuote | null;
+  bookingCheckout?: LLMBookingCheckout | null;
   metadata?: LLMMetadata;
   timestamp: string;
 }
