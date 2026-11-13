@@ -1,7 +1,15 @@
 import json
+import os
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    HAS_PSYCOPG2 = True
+except ImportError:
+    HAS_PSYCOPG2 = False
 
 DB_PATH = Path(__file__).parent / "aurelia.db"
 
@@ -321,7 +329,92 @@ INITIAL_HOTELS: List[Dict[str, Any]] = [
 ]
 
 
-def get_connection() -> sqlite3.Connection:
+def get_database_url() -> Optional[str]:
+    url = (
+        os.environ.get("DATABASE_URL")
+        or os.environ.get("SUPABASE_DATABASE_URL")
+        or os.environ.get("POSTGRES_URL")
+    )
+    if url and url.strip():
+        u = url.strip()
+        if u.startswith("postgres://"):
+            u = u.replace("postgres://", "postgresql://", 1)
+        return u
+    return None
+
+
+class PgCursorWrapper:
+    def __init__(self, cur):
+        self._cur = cur
+
+    def execute(self, query: str, params=None):
+        q = query.replace("?", "%s")
+        if "INSERT OR REPLACE INTO hotels" in q:
+            q = q.replace("INSERT OR REPLACE INTO hotels", "INSERT INTO hotels")
+            q += """ ON CONFLICT (id) DO UPDATE SET
+                name = EXCLUDED.name,
+                city = EXCLUDED.city,
+                location = EXCLUDED.location,
+                rating = EXCLUDED.rating,
+                reviews = EXCLUDED.reviews,
+                stars = EXCLUDED.stars,
+                price = EXCLUDED.price,
+                image = EXCLUDED.image,
+                gallery_json = EXCLUDED.gallery_json,
+                description = EXCLUDED.description,
+                amenities_json = EXCLUDED.amenities_json,
+                rooms_json = EXCLUDED.rooms_json"""
+        elif "INSERT OR REPLACE INTO chat_histories" in q:
+            q = q.replace("INSERT OR REPLACE INTO chat_histories", "INSERT INTO chat_histories")
+            q += """ ON CONFLICT (user_email) DO UPDATE SET
+                messages_json = EXCLUDED.messages_json,
+                quick_replies_json = EXCLUDED.quick_replies_json,
+                updated_at = EXCLUDED.updated_at"""
+
+        if params is not None:
+            return self._cur.execute(q, params)
+        return self._cur.execute(q)
+
+    def fetchone(self):
+        return self._cur.fetchone()
+
+    def fetchall(self):
+        return self._cur.fetchall()
+
+    @property
+    def rowcount(self):
+        return self._cur.rowcount
+
+    def close(self):
+        return self._cur.close()
+
+
+class PgConnectionWrapper:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def cursor(self):
+        return PgCursorWrapper(self._conn.cursor(cursor_factory=RealDictCursor))
+
+    def commit(self):
+        return self._conn.commit()
+
+    def rollback(self):
+        return self._conn.rollback()
+
+    def close(self):
+        return self._conn.close()
+
+
+def get_connection():
+    db_url = get_database_url()
+    if db_url and HAS_PSYCOPG2:
+        try:
+            conn = psycopg2.connect(db_url, sslmode="require")
+            return PgConnectionWrapper(conn)
+        except Exception as exc:
+            print(f"[WARN] Failed to connect to Supabase PostgreSQL ({exc}), falling back to SQLite.")
+
     conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
@@ -346,10 +439,12 @@ def init_db() -> None:
         """
     )
 
-    cur.execute("PRAGMA table_info(users)")
-    cols = [r["name"] for r in cur.fetchall()]
-    if "role" not in cols:
-        cur.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
+    db_url = get_database_url()
+    if not (db_url and HAS_PSYCOPG2):
+        cur.execute("PRAGMA table_info(users)")
+        cols = [r["name"] for r in cur.fetchall()]
+        if "role" not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
 
     cur.execute(
         """
